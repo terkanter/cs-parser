@@ -1,0 +1,53 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": [
+    "**/.env.*local",
+    "biome.json",
+    "packages/tsconfig/**"
+  ],
+  "tasks": {
+    "build:dev": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["lint", "^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "verify-types": {},
+    "lint": {},
+    "test:ci": {
+      "dependsOn": ["@repo/backend-errors#build:dev"],
+      "persistent": false,
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["@repo/backend-errors#build:dev"],
+      "interactive": true,
+      "persistent": true,
+      "cache": false
+    },
+    "build:backend": {
+      "dependsOn": ["@repo/backend#lint", "@repo/backend#build:dev"],
+      "cache": true,
+      "inputs": ["apps/backend-api/**", "!apps/backend-api/dist/**"],
+      "outputs": ["apps/backend/dist/**"]
+    },
+    "generate:sdk": {
+      "dependsOn": ["@repo/backend-client#build:dev"],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": ["build:dev"],
+      "cache": false,
+      "persistent": true
+    },
+    "prod": {
+      "dependsOn": ["build"],
+      "persistent": true,
+      "cache": true,
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    }
+  }
+}

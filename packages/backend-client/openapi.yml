@@ -1,0 +1,17 @@
+openapi: 3.0.3
+info:
+  title: Backend API
+  version: 1.0.0
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}
+paths:
+  /:
+    get:
+      responses:
+        "200":
+          description: Default Response
