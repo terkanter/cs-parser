@@ -23,6 +23,11 @@ export const auth = betterAuth({
     additionalFields: {
       telegramId: {
         type: "string",
+        required: false,
+      },
+      liskinsApiKey: {
+        type: "string",
+        required: false,
       },
     },
   },

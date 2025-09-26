@@ -8,6 +8,7 @@ const userSchema = z.object({
   name: z.string(),
   image: z.string().nullable(),
   telegramId: z.string().nullable(),
+  liskinsApiKey: z.string().nullable(),
   emailVerified: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -16,6 +17,7 @@ const userSchema = z.object({
 const updateUserBodySchema = z.object({
   name: z.string().optional(),
   telegramId: z.string().nullable().optional(),
+  liskinsApiKey: z.string().nullable().optional(),
 });
 
 export async function registerUserMeRoute(fastify: FastifyInstance) {
@@ -26,7 +28,6 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         description: "Get current user profile",
         tags: ["users"],
         response: {
-          200: userSchema,
           401: z.object({
             error: z.string(),
             code: z.string(),
@@ -51,7 +52,8 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
           email: user.email,
           name: user.name,
           image: user.image,
-          telegramId: user.telegramId || null,
+          telegramId: (user as any).telegramId || null,
+          liskinsApiKey: (user as any).liskinsApiKey || null,
           emailVerified: user.emailVerified,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
@@ -76,7 +78,6 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         operationId: "updateUserProfile",
         body: updateUserBodySchema,
         response: {
-          200: userSchema,
           401: z.object({
             error: z.string(),
             code: z.string(),
@@ -99,7 +100,10 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         }
 
         const { user } = request.ctx.requireAuth();
-        const { telegramId } = request.body as { telegramId: string | null };
+        const { telegramId, liskinsApiKey } = request.body as {
+          telegramId: string | null;
+          liskinsApiKey: string | null;
+        };
 
         // Check if telegramId is already taken by another user
         if (telegramId) {
@@ -123,7 +127,10 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         // Update user
         const updatedUser = await request.ctx.prisma.user.update({
           where: { id: user!.id },
-          data: { telegramId },
+          data: {
+            ...(telegramId !== undefined && { telegramId }),
+            ...(liskinsApiKey !== undefined && { liskinsApiKey }),
+          },
         });
 
         return {
@@ -132,6 +139,7 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
           name: updatedUser.name,
           image: updatedUser.image,
           telegramId: updatedUser.telegramId,
+          liskinsApiKey: updatedUser.liskinsApiKey,
           emailVerified: updatedUser.emailVerified,
           createdAt: updatedUser.createdAt.toISOString(),
           updatedAt: updatedUser.updatedAt.toISOString(),

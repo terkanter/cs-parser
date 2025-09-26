@@ -1,9 +1,10 @@
+import { env } from "@/shared/env";
 import s from "query-string";
 import { fetchUtils } from "ra-core";
 
 const stringify = s.stringify;
 
-const apiUrl = "https://my.api.com/";
+const apiUrl = `${env.VITE_API_URL}/api`;
 const httpClient = fetchUtils.fetchJson;
 
 export const dataProvider = {

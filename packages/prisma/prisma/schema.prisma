@@ -18,12 +18,17 @@ model User {
   name          String
   email         String
   emailVerified Boolean
-  telegramId    String?
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+
+  // Custom fields
+  telegramId    String?
+  liskinsApiKey String?
+
+  buyRequests BuyRequest[]
 
   @@unique([email])
   @@map("user")
@@ -88,6 +93,9 @@ model BuyRequest {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  createdByUserId String
+  createdByUser   User   @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
 
   @@map("buy_requests")
 }

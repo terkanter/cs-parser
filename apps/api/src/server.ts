@@ -1,9 +1,9 @@
 import { errorHandler } from "@/api-lib/error-handler";
 import routes from "@/api/index";
-import { registerCorsConfig } from "@/auth/cors-config";
 import { plugins } from "@/plugins/index";
 import { asyncLocalStorage } from "@/utils/async-local-storage";
 import { getLogger } from "@/utils/logger";
+import fastifyCors from "@fastify/cors";
 import Fastify from "fastify";
 import fp from "fastify-plugin";
 import { type ZodTypeProvider, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
@@ -22,14 +22,21 @@ export async function startServer({ port }: { port: number }) {
     .setValidatorCompiler(validatorCompiler)
     .setSerializerCompiler(serializerCompiler);
 
+  // Register CORS directly as THE FIRST PLUGIN
+  await fastify.register(fastifyCors, {
+    origin: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+    allowedHeaders: "*",
+    credentials: true,
+  });
+
+  fastify.log.info("CORS registered directly in server.ts");
+
   fastify.addHook("onRequest", (request, _reply, done) => {
     const logger = fastify.log.withContext({ reqId: request.id });
 
     asyncLocalStorage.run({ logger }, done);
   });
-
-  // Register Better Auth specific CORS configuration FIRST
-  fastify.register(registerCorsConfig);
 
   fastify.register(fp(plugins));
 
