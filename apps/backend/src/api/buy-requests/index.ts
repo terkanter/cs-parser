@@ -2,24 +2,41 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { Platform } from "@repo/prisma";
-import { paginationParamsSchema, getPaginationParams, getPaginationMeta, paginationMetaSchema } from "@/utils/pagination";
+import {
+  paginationParamsSchema,
+  getPaginationParams,
+  getPaginationMeta,
+  paginationMetaSchema,
+} from "@/utils/pagination";
 
 const platformSchema = z.nativeEnum(Platform);
 
 // Query field schema - matches the JSON structure you specified
 const queryFieldSchema = z.object({
-  price: z.array(z.object({
-    gte: z.number().optional(),
-    lte: z.number().optional(),
-  })).optional(),
-  float: z.array(z.object({
-    gte: z.number().optional(),
-    lte: z.number().optional(),
-  })).optional(),
-  paint_seed: z.array(z.object({
-    gte: z.number().optional(),
-    lte: z.number().optional(),
-  })).optional(),
+  price: z
+    .array(
+      z.object({
+        gte: z.number().optional(),
+        lte: z.number().optional(),
+      }),
+    )
+    .optional(),
+  float: z
+    .array(
+      z.object({
+        gte: z.number().optional(),
+        lte: z.number().optional(),
+      }),
+    )
+    .optional(),
+  paint_seed: z
+    .array(
+      z.object({
+        gte: z.number().optional(),
+        lte: z.number().optional(),
+      }),
+    )
+    .optional(),
   item: z.array(z.string()).optional(),
   quality: z.array(z.enum(["FN", "MW", "FT", "WW", "BS"])).optional(),
 });
@@ -88,7 +105,7 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       ]);
 
       return {
-        data: data.map(item => ({
+        data: data.map((item) => ({
           ...item,
           createdAt: item.createdAt.toISOString(),
           updatedAt: item.updatedAt.toISOString(),
@@ -217,7 +234,7 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         };
       } catch (error: any) {
         request.log.error("Error updating buy request:", error);
-        
+
         if (error.code === "P2025") {
           return reply.status(404).send({
             error: "Buy request not found",
@@ -262,7 +279,7 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         return reply.status(204).send();
       } catch (error: any) {
         request.log.error("Error deleting buy request:", error);
-        
+
         if (error.code === "P2025") {
           return reply.status(404).send({
             error: "Buy request not found",

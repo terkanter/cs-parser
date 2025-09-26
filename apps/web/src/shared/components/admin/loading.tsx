@@ -2,12 +2,7 @@ import { Translate, useTimeout } from "ra-core";
 import { Spinner } from "./spinner";
 
 export const Loading = (props: LoadingProps) => {
-  const {
-    loadingPrimary = "ra.page.loading",
-    loadingSecondary = "ra.message.loading",
-    delay = 1000,
-    ...rest
-  } = props;
+  const { loadingPrimary = "ra.page.loading", loadingSecondary = "ra.message.loading", delay = 1000, ...rest } = props;
   const oneSecondHasPassed = useTimeout(delay);
   return oneSecondHasPassed ? (
     <div className="flex flex-col justify-center items-center h-full" {...rest}>

@@ -14,9 +14,7 @@ export interface FilterElementProps {
   [key: string]: any; // Allow any other prop
 }
 
-export type FilterContextType =
-  | React.ReactElement<FilterElementProps>[]
-  | undefined;
+export type FilterContextType = React.ReactElement<FilterElementProps>[] | undefined;
 
 /**
  * Make filters accessible to sub components

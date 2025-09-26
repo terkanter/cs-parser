@@ -1,10 +1,4 @@
-import {
-  useResourceContext,
-  useGetList,
-  useTimeout,
-  useCreatePath,
-  SortPayload,
-} from "ra-core";
+import { useResourceContext, useGetList, useTimeout, useCreatePath, type SortPayload } from "ra-core";
 import { CircleX, LoaderCircle } from "lucide-react";
 
 import { Link } from "react-router";
@@ -40,9 +34,7 @@ export const Count = (props: CountProps) => {
   } = props;
   const resource = useResourceContext(props);
   if (!resource) {
-    throw new Error(
-      "The Count component must be used inside a ResourceContext or must be passed a resource prop."
-    );
+    throw new Error("The Count component must be used inside a ResourceContext or must be passed a resource prop.");
   }
   const oneSecondHasPassed = useTimeout(timeout);
   const createPath = useCreatePath();

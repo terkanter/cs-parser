@@ -1,23 +1,20 @@
 import {
-  LinkToType,
-  RaRecord,
+  type LinkToType,
+  type RaRecord,
   ReferenceFieldBase,
   type UseReferenceFieldControllerResult,
   useFieldValue,
   useGetRecordRepresentation,
   useReferenceFieldContext,
   useTranslate,
-  ExtractRecordPaths,
+  type ExtractRecordPaths,
 } from "ra-core";
-import { MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Link } from "react-router";
-import { UseQueryOptions } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
-export const ReferenceField = <
-  RecordType extends RaRecord = RaRecord,
-  ReferenceRecordType extends RaRecord = RaRecord
->(
-  props: ReferenceFieldProps<RecordType, ReferenceRecordType>
+export const ReferenceField = <RecordType extends RaRecord = RaRecord, ReferenceRecordType extends RaRecord = RaRecord>(
+  props: ReferenceFieldProps<RecordType, ReferenceRecordType>,
 ) => {
   const { loading, error, empty, render, ...rest } = props;
   const id = useFieldValue<RecordType>(props);
@@ -31,19 +28,14 @@ export const ReferenceField = <
     )
   ) : (
     <ReferenceFieldBase {...rest}>
-      <ReferenceFieldView<ReferenceRecordType>
-        render={render}
-        loading={loading}
-        error={error}
-        {...rest}
-      />
+      <ReferenceFieldView<ReferenceRecordType> render={render} loading={loading} error={error} {...rest} />
     </ReferenceFieldBase>
   );
 };
 
 export interface ReferenceFieldProps<
   RecordType extends RaRecord = RaRecord,
-  ReferenceRecordType extends RaRecord = RaRecord
+  ReferenceRecordType extends RaRecord = RaRecord,
 > extends Partial<ReferenceFieldViewProps<ReferenceRecordType>> {
   children?: ReactNode;
   queryOptions?: UseQueryOptions<RaRecord[], Error> & {
@@ -58,23 +50,12 @@ export interface ReferenceFieldProps<
 }
 
 // useful to prevent click bubbling in a datagrid with rowClick
-const stopPropagation = (e: MouseEvent<HTMLAnchorElement>) =>
-  e.stopPropagation();
+const stopPropagation = (e: MouseEvent<HTMLAnchorElement>) => e.stopPropagation();
 
-export const ReferenceFieldView = <
-  ReferenceRecordType extends RaRecord = RaRecord
->(
-  props: ReferenceFieldViewProps<ReferenceRecordType>
+export const ReferenceFieldView = <ReferenceRecordType extends RaRecord = RaRecord>(
+  props: ReferenceFieldViewProps<ReferenceRecordType>,
 ) => {
-  const {
-    children,
-    className,
-    empty,
-    error: errorElement,
-    render,
-    reference,
-    loading,
-  } = props;
+  const { children, className, empty, error: errorElement, render, reference, loading } = props;
   const referenceFieldContext = useReferenceFieldContext();
   const { error, link, isPending, referenceRecord } = referenceFieldContext;
   const getRecordRepresentation = useGetRecordRepresentation(reference);
@@ -87,11 +68,7 @@ export const ReferenceFieldView = <
     return loading;
   }
   if (!referenceRecord && empty !== false) {
-    return typeof empty === "string" ? (
-      <>{empty && translate(empty, { _: empty })}</>
-    ) : (
-      empty
-    );
+    return typeof empty === "string" ? <>{empty && translate(empty, { _: empty })}</> : empty;
   }
 
   const child = render
@@ -111,9 +88,7 @@ export const ReferenceFieldView = <
   return <>{child}</>;
 };
 
-export interface ReferenceFieldViewProps<
-  ReferenceRecordType extends RaRecord = RaRecord
-> {
+export interface ReferenceFieldViewProps<ReferenceRecordType extends RaRecord = RaRecord> {
   children?: ReactNode;
   className?: string;
   empty?: ReactNode;

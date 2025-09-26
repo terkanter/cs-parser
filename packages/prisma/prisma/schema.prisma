@@ -14,88 +14,84 @@ datasource db {
 
 // Better Auth models
 model User {
-    id        String   @id @default(cuid())
-    email     String   @unique
-    name      String
-    image     String?
-    telegramId String? @unique @map("telegram_id")
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String
+  image      String?
+  telegramId String?  @unique @map("telegram_id")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-    // Better Auth fields
-    emailVerified Boolean @default(false)
+  // Better Auth fields
+  emailVerified Boolean @default(false)
 
-    // Relations
-    sessions Session[]
-    accounts Account[]
+  // Relations
+  sessions Session[]
+  accounts Account[]
 
-    @@map("users")
+  @@map("users")
 }
 
 model Session {
-    id        String   @id @default(cuid())
-    token     String   @unique
-    userId    String
-    expiresAt DateTime
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    // Relations
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@map("sessions")
+  @@map("sessions")
 }
 
 model Account {
-    id           String    @id @default(cuid())
-    accountId    String
-    providerId   String
-    userId       String
-    accessToken  String?
-    refreshToken String?
-    idToken      String?
-    expiresAt    DateTime?
-    password     String?
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  accountId    String
+  providerId   String
+  userId       String
+  accessToken  String?
+  refreshToken String?
+  idToken      String?
+  expiresAt    DateTime?
+  password     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-    // Relations
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([providerId, accountId])
-    @@map("accounts")
+  @@unique([providerId, accountId])
+  @@map("accounts")
 }
 
 model Verification {
-    id         String   @id @default(cuid())
-    identifier String
-    value      String
-    expiresAt  DateTime
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-    @@unique([identifier, value])
-    @@map("verifications")
+  @@unique([identifier, value])
+  @@map("verifications")
 }
 
 enum Platform {
-    LIS_SKINS
-    CS_MONEY
-    STEAM
-    BUFF163
-    SKINPORT
-    DMARKET
+  LIS_SKINS
+  CS_MONEY
 
-    @@map("platforms")
+  @@map("platforms")
 }
 
 model BuyRequest {
-    id        String   @id @default(cuid())
-    platform  Platform
-    query     Json
-    isActive  Boolean  @default(true) @map("is_active")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  platform  Platform
+  query     Json
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    @@map("buy_requests")
+  @@map("buy_requests")
 }

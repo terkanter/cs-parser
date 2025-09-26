@@ -1,10 +1,10 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   ReferenceManyFieldBase,
   useListContext,
-  RaRecord,
-  UseReferenceManyFieldControllerParams,
-  ListControllerResult,
+  type RaRecord,
+  type UseReferenceManyFieldControllerParams,
+  type ListControllerResult,
 } from "ra-core";
 
 export const ReferenceManyField = <
@@ -13,8 +13,7 @@ export const ReferenceManyField = <
 >(
   props: ReferenceManyFieldProps<RecordType, ReferenceRecordType>,
 ) => {
-  const { children, empty, error, loading, pagination, render, ...rest } =
-    props;
+  const { children, empty, error, loading, pagination, render, ...rest } = props;
 
   return (
     <ReferenceManyFieldBase {...rest}>
@@ -34,35 +33,15 @@ export const ReferenceManyField = <
 export interface ReferenceManyFieldProps<
   RecordType extends RaRecord = RaRecord,
   ReferenceRecordType extends RaRecord = RaRecord,
-> extends UseReferenceManyFieldControllerParams<
-      RecordType,
-      ReferenceRecordType
-    >,
+> extends UseReferenceManyFieldControllerParams<RecordType, ReferenceRecordType>,
     ReferenceManyFieldViewProps<ReferenceRecordType> {}
 
-const ReferenceManyFieldView = <
-  ReferenceRecordType extends RaRecord = RaRecord,
->(
+const ReferenceManyFieldView = <ReferenceRecordType extends RaRecord = RaRecord>(
   props: ReferenceManyFieldViewProps<ReferenceRecordType>,
 ) => {
-  const {
-    children,
-    empty,
-    error: errorElement,
-    loading,
-    pagination,
-    render,
-  } = props;
+  const { children, empty, error: errorElement, loading, pagination, render } = props;
   const listContext = useListContext();
-  const {
-    isPending,
-    error,
-    total,
-    hasPreviousPage,
-    hasNextPage,
-    data,
-    filterValues,
-  } = listContext;
+  const { isPending, error, total, hasPreviousPage, hasNextPage, data, filterValues } = listContext;
 
   if (isPending && loading !== false) {
     return loading;
@@ -93,9 +72,7 @@ const ReferenceManyFieldView = <
   );
 };
 
-export interface ReferenceManyFieldViewProps<
-  ReferenceRecordType extends RaRecord = RaRecord,
-> {
+export interface ReferenceManyFieldViewProps<ReferenceRecordType extends RaRecord = RaRecord> {
   children?: ReactNode;
   empty?: ReactNode;
   error?: ReactNode;

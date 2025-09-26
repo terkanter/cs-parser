@@ -16,7 +16,7 @@ async function routes(fastify: FastifyInstance) {
     async function userRoutes(fastify) {
       await registerUserMeRoute(fastify);
     },
-    { prefix: "/users" }
+    { prefix: "/users" },
   );
 
   // Register buy request routes
@@ -24,7 +24,7 @@ async function routes(fastify: FastifyInstance) {
     async function buyRequestRoutes(fastify) {
       await registerBuyRequestRoutes(fastify);
     },
-    { prefix: "/buy-requests" }
+    { prefix: "/buy-requests" },
   );
 
   // Register your other API routes here

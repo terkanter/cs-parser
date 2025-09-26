@@ -1,14 +1,14 @@
-import * as React from "react";
+import type * as React from "react";
 import {
-  ChangeEvent,
+  type ChangeEvent,
   createContext,
   isValidElement,
-  ReactElement,
+  type ReactElement,
   useContext,
   useRef,
   useState,
 } from "react";
-import { Identifier, OptionText, useTranslate } from "ra-core";
+import { type Identifier, type OptionText, useTranslate } from "ra-core";
 import set from "lodash/set";
 
 /**
@@ -32,7 +32,7 @@ import set from "lodash/set";
  * - createElement: a React element to render after the input. It will be rendered when users choose to create a new choice. It renders null otherwise.
  * - getOptionDisabled: a function which should be passed to the input to disable the create choice when the filter is empty (to make it a hint).
  */
-export const useSupportCreateSuggestion = <T = unknown,>(
+export const useSupportCreateSuggestion = <T = unknown>(
   options: SupportCreateSuggestionOptions<T>,
 ): UseSupportCreateValue<T> => {
   const {
@@ -84,9 +84,7 @@ export const useSupportCreateSuggestion = <T = unknown,>(
           if (!onCreate) {
             // this should never happen because the createValue is only added if a create function is provided
             // @see AutocompleteInput:filterOptions
-            throw new Error(
-              "To create a new option, you must pass an onCreate function or a create element.",
-            );
+            throw new Error("To create a new option, you must pass an onCreate function or a create element.");
           }
           const newSuggestion = await onCreate(filter);
           if (newSuggestion) {
@@ -155,9 +153,7 @@ export interface UseSupportCreateValue<T = unknown> {
 /**
  * @deprecated Use `CreateSuggestionContext` from "ra-core" when available.
  */
-const CreateSuggestionContext = createContext<
-  CreateSuggestionContextValue | undefined
->(undefined);
+const CreateSuggestionContext = createContext<CreateSuggestionContextValue | undefined>(undefined);
 
 /**
  * @deprecated Use `CreateSuggestionContextValue` from "ra-core" when available.
@@ -174,9 +170,7 @@ interface CreateSuggestionContextValue<T = unknown> {
 export const useCreateSuggestionContext = () => {
   const context = useContext(CreateSuggestionContext);
   if (!context) {
-    throw new Error(
-      "useCreateSuggestionContext must be used inside a CreateSuggestionContext.Provider",
-    );
+    throw new Error("useCreateSuggestionContext must be used inside a CreateSuggestionContext.Provider");
   }
   return context;
 };

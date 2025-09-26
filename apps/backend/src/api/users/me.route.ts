@@ -106,9 +106,9 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
             where: {
               telegramId: updateData.telegramId,
               NOT: {
-                id: user.id
-              }
-            }
+                id: user.id,
+              },
+            },
           });
 
           if (existingUser) {
@@ -122,7 +122,7 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         // Update user
         const updatedUser = await fastify.prisma.user.update({
           where: { id: user.id },
-          data: updateData
+          data: updateData,
         });
 
         return {

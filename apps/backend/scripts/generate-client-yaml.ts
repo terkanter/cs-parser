@@ -62,21 +62,9 @@ async function generateOpenAPISchema() {
   console.log("Generating backend-client OpenAPI schema...");
 
   const schema = stringify(fastify.swagger());
-  await writeFile(
-    path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "packages",
-      "backend-client",
-      "openapi.yml"
-    ),
-    schema,
-    {
-      flag: "w+",
-    }
-  );
+  await writeFile(path.join(__dirname, "..", "..", "..", "packages", "backend-client", "openapi.yml"), schema, {
+    flag: "w+",
+  });
 
   await fastify.close();
 

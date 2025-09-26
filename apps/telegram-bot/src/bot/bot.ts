@@ -1,169 +1,170 @@
-import { Bot, Context, session, SessionFlavor } from 'grammy'
-import { env } from '../env'
-import { logger } from '../utils/logger'
-import { FoundItemMessage } from '../services/rabbitmq'
+import { Bot, type Context, session, type SessionFlavor } from "grammy";
+import { env } from "../env";
+import { logger } from "../utils/logger";
+import type { FoundItemMessage } from "../services/rabbitmq";
 import { prisma } from "@repo/prisma";
 
 interface SessionData {
-  step?: string
+  step?: string;
 }
 
-type BotContext = Context & SessionFlavor<SessionData>
+type BotContext = Context & SessionFlavor<SessionData>;
 
 export class TelegramBot {
-  private bot: Bot<BotContext>
+  private bot: Bot<BotContext>;
 
   constructor() {
-    this.bot = new Bot<BotContext>(env.TELEGRAM_BOT_TOKEN)
-    this.setupMiddleware()
-    this.setupCommands()
+    this.bot = new Bot<BotContext>(env.TELEGRAM_BOT_TOKEN);
+    this.setupMiddleware();
+    this.setupCommands();
   }
 
   private setupMiddleware() {
     // Session middleware
-    this.bot.use(session({
-      initial: (): SessionData => ({}),
-    }))
+    this.bot.use(
+      session({
+        initial: (): SessionData => ({}),
+      }),
+    );
   }
 
   private setupCommands() {
     // Start command
-    this.bot.command('start', async (ctx) => {
-      const telegramId = ctx.from?.id.toString()
-      if (!telegramId) return
+    this.bot.command("start", async (ctx) => {
+      const telegramId = ctx.from?.id.toString();
+      if (!telegramId) return;
 
       await ctx.reply(
-        'Привет! 👋\n\n' +
-        'Я бот для уведомлений о найденных предметах CS2.\n\n' +
-        'Команды:\n' +
-        '/link - Привязать аккаунт\n' +
-        '/unlink - Отвязать аккаунт\n' +
-        '/status - Проверить статус\n' +
-        '/help - Помощь'
-      )
-    })
+        "Привет! 👋\n\n" +
+          "Я бот для уведомлений о найденных предметах CS2.\n\n" +
+          "Команды:\n" +
+          "/link - Привязать аккаунт\n" +
+          "/unlink - Отвязать аккаунт\n" +
+          "/status - Проверить статус\n" +
+          "/help - Помощь",
+      );
+    });
 
     // Link account command
-    this.bot.command('link', async (ctx) => {
-      const telegramId = ctx.from?.id.toString()
-      if (!telegramId) return
+    this.bot.command("link", async (ctx) => {
+      const telegramId = ctx.from?.id.toString();
+      if (!telegramId) return;
 
       try {
         // Check if user already linked
         const existingUser = await prisma.user.findFirst({
-          where: { telegramId }
-        })
+          where: { telegramId },
+        });
 
         if (existingUser) {
-          await ctx.reply('✅ Ваш аккаунт уже привязан!')
-          return
+          await ctx.reply("✅ Ваш аккаунт уже привязан!");
+          return;
         }
 
         await ctx.reply(
-          '🔗 Для привязки аккаунта:\n\n' +
-          '1. Зайдите в веб-приложение\n' +
-          '2. Перейдите в настройки профиля\n' +
-          '3. Введите ваш Telegram ID: `' + telegramId + '`\n' +
-          '4. Сохраните изменения\n\n' +
-          'После этого вы будете получать уведомления!',
-          { parse_mode: 'Markdown' }
-        )
+          "🔗 Для привязки аккаунта:\n\n" +
+            "1. Зайдите в веб-приложение\n" +
+            "2. Перейдите в настройки профиля\n" +
+            "3. Введите ваш Telegram ID: `" +
+            telegramId +
+            "`\n" +
+            "4. Сохраните изменения\n\n" +
+            "После этого вы будете получать уведомления!",
+          { parse_mode: "Markdown" },
+        );
       } catch (error) {
-        logger.error(error, 'Error in link command')
-        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.')
+        logger.error(error, "Error in link command");
+        await ctx.reply("❌ Произошла ошибка. Попробуйте позже.");
       }
-    })
+    });
 
     // Unlink account command
-    this.bot.command('unlink', async (ctx) => {
-      const telegramId = ctx.from?.id.toString()
-      if (!telegramId) return
+    this.bot.command("unlink", async (ctx) => {
+      const telegramId = ctx.from?.id.toString();
+      if (!telegramId) return;
 
       try {
         const user = await prisma.user.findFirst({
-          where: { telegramId }
-        })
+          where: { telegramId },
+        });
 
         if (!user) {
-          await ctx.reply('❌ Ваш аккаунт не привязан.')
-          return
+          await ctx.reply("❌ Ваш аккаунт не привязан.");
+          return;
         }
 
         await prisma.user.update({
           where: { id: user.id },
-          data: { telegramId: null }
-        })
+          data: { telegramId: null },
+        });
 
-        await ctx.reply('✅ Аккаунт успешно отвязан!')
+        await ctx.reply("✅ Аккаунт успешно отвязан!");
       } catch (error) {
-        logger.error(error, 'Error in unlink command')
-        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.')
+        logger.error(error, "Error in unlink command");
+        await ctx.reply("❌ Произошла ошибка. Попробуйте позже.");
       }
-    })
+    });
 
     // Status command
-    this.bot.command('status', async (ctx) => {
-      const telegramId = ctx.from?.id.toString()
-      if (!telegramId) return
+    this.bot.command("status", async (ctx) => {
+      const telegramId = ctx.from?.id.toString();
+      if (!telegramId) return;
 
       try {
         const user = await prisma.user.findFirst({
-          where: { telegramId }
-        })
+          where: { telegramId },
+        });
 
         if (!user) {
-          await ctx.reply('❌ Аккаунт не привязан. Используйте /link для привязки.')
-          return
+          await ctx.reply("❌ Аккаунт не привязан. Используйте /link для привязки.");
+          return;
         }
 
         await ctx.reply(
           `✅ Аккаунт привязан!\n\n` +
-          `👤 Имя: ${user.name}\n` +
-          `📧 Email: ${user.email}\n` +
-          `🆔 Telegram ID: ${telegramId}`
-        )
+            `👤 Имя: ${user.name}\n` +
+            `📧 Email: ${user.email}\n` +
+            `🆔 Telegram ID: ${telegramId}`,
+        );
       } catch (error) {
-        logger.error(error, 'Error in status command')
-        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.')
+        logger.error(error, "Error in status command");
+        await ctx.reply("❌ Произошла ошибка. Попробуйте позже.");
       }
-    })
+    });
 
     // Help command
-    this.bot.command('help', async (ctx) => {
+    this.bot.command("help", async (ctx) => {
       await ctx.reply(
-        '🤖 Помощь по боту\n\n' +
-        'Команды:\n' +
-        '/start - Начать работу с ботом\n' +
-        '/link - Привязать ваш аккаунт\n' +
-        '/unlink - Отвязать аккаунт\n' +
-        '/status - Проверить статус привязки\n' +
-        '/help - Показать эту справку\n\n' +
-        'Бот отправляет уведомления когда найдены предметы, соответствующие вашим заявкам на покупку.'
-      )
-    })
+        "🤖 Помощь по боту\n\n" +
+          "Команды:\n" +
+          "/start - Начать работу с ботом\n" +
+          "/link - Привязать ваш аккаунт\n" +
+          "/unlink - Отвязать аккаунт\n" +
+          "/status - Проверить статус привязки\n" +
+          "/help - Показать эту справку\n\n" +
+          "Бот отправляет уведомления когда найдены предметы, соответствующие вашим заявкам на покупку.",
+      );
+    });
 
     // Handle unknown messages
-    this.bot.on('message', async (ctx) => {
-      await ctx.reply(
-        '🤔 Не понимаю эту команду.\n' +
-        'Используйте /help для списка доступных команд.'
-      )
-    })
+    this.bot.on("message", async (ctx) => {
+      await ctx.reply("🤔 Не понимаю эту команду.\n" + "Используйте /help для списка доступных команд.");
+    });
   }
 
   async sendFoundItemNotification(userId: string, message: FoundItemMessage): Promise<void> {
     try {
       const user = await prisma.user.findUnique({
-        where: { id: userId }
-      })
+        where: { id: userId },
+      });
 
       if (!user || !user.telegramId) {
-        logger.warn({ userId }, `User ${userId} has no Telegram ID`)
-        return
+        logger.warn({ userId }, `User ${userId} has no Telegram ID`);
+        return;
       }
 
-      const { item } = message
-      const text = 
+      const { item } = message;
+      const text =
         `🎯 Найден предмет!\n\n` +
         `📦 ${item.name}\n` +
         `💰 Цена: ${item.price}₽\n` +
@@ -171,22 +172,22 @@ export class TelegramBot {
         `🎲 Paint Seed: ${item.paintSeed}\n` +
         `⭐ Качество: ${item.quality}\n` +
         `🏪 Площадка: ${message.platform}\n\n` +
-        `🔗 [Перейти к предмету](${item.url})`
+        `🔗 [Перейти к предмету](${item.url})`;
 
       await this.bot.api.sendMessage(user.telegramId, text, {
-        parse_mode: 'Markdown',
-        disable_web_page_preview: true
-      })
+        parse_mode: "Markdown",
+        disable_web_page_preview: true,
+      });
 
-      logger.info({ userId }, `Sent notification to user ${userId}`)
+      logger.info({ userId }, `Sent notification to user ${userId}`);
     } catch (error) {
-      logger.error(error, 'Error sending notification')
+      logger.error(error, "Error sending notification");
     }
   }
 
   async start(): Promise<void> {
-    logger.info('Starting Telegram bot...')
-    
+    logger.info("Starting Telegram bot...");
+
     // if (env.WEBHOOK_URL) {
     //   // Production: use webhooks
     //   await this.bot.api.setWebhook(env.WEBHOOK_URL, {
@@ -194,20 +195,20 @@ export class TelegramBot {
     //   })
     //   logger.info('Webhook set successfully')
     // } else {
-      // Development: use long polling
-      await this.bot.start()
-      logger.info('Bot started with long polling')
+    // Development: use long polling
+    await this.bot.start();
+    logger.info("Bot started with long polling");
     // }
   }
 
   async stop(): Promise<void> {
-    logger.info('Stopping Telegram bot...')
-    await this.bot.stop()
+    logger.info("Stopping Telegram bot...");
+    await this.bot.stop();
   }
 
   getBotInstance(): Bot<BotContext> {
-    return this.bot
+    return this.bot;
   }
 }
 
-export const telegramBot = new TelegramBot()
+export const telegramBot = new TelegramBot();

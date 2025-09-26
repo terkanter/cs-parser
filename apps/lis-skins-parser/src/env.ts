@@ -1,14 +1,14 @@
-import { z } from 'zod'
-import { config } from 'dotenv'
+import { z } from "zod";
+import { config } from "dotenv";
 
-config()
+config();
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
-  RABBITMQ_URL: z.string().url().default('amqp://localhost:5672'),
+  RABBITMQ_URL: z.string().url().default("amqp://localhost:5672"),
   PARSER_INTERVAL_MS: z.coerce.number().default(30000), // 30 seconds
   MAX_CONCURRENT_PARSERS: z.coerce.number().default(5),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-})
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+});
 
-export const env = envSchema.parse(process.env)
+export const env = envSchema.parse(process.env);

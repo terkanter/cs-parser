@@ -27,11 +27,7 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: [
-    "http://localhost:3000",
-    "http://localhost:3080",
-    env.FRONTEND_URL || "",
-  ].filter(Boolean),
+  trustedOrigins: ["http://localhost:3000", "http://localhost:3080", env.FRONTEND_URL || ""].filter(Boolean),
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   logger: {
