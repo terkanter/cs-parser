@@ -74,18 +74,29 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       const perPage = Number(query.perPage) || 10;
       const platform = query.platform as Platform | undefined;
       const isActive = query.isActive !== undefined ? query.isActive === "true" : undefined;
+      const sort = query.sort as string | undefined;
+      const order = query.order as "asc" | "desc" | undefined;
+
       const { take, skip } = getPaginationParams({ page, perPage });
 
       const where: any = {};
       if (platform) where.platform = platform;
       if (isActive !== undefined) where.isActive = isActive;
 
+      // Build order by clause
+      const orderBy: any = {};
+      if (sort && order) {
+        orderBy[sort] = order;
+      } else {
+        orderBy.createdAt = "desc";
+      }
+
       const [data, total] = await Promise.all([
         request.ctx.prisma.buyRequest.findMany({
           where,
           skip,
           take,
-          orderBy: { createdAt: "desc" },
+          orderBy,
         }),
         request.ctx.prisma.buyRequest.count({ where }),
       ]);
@@ -102,24 +113,18 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
   );
 
   // GET /buy-requests/:id - Get single buy request
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "GET",
-    url: "/:id",
-    schema: {
-      description: "Get buy request by ID",
-      tags: ["buy-requests"],
-      params: z.object({
-        id: z.string(),
-      }),
-      response: {
-        200: buyRequestSchema,
-        404: z.object({
-          error: z.string(),
-          code: z.string(),
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    "/:id",
+    {
+      schema: {
+        description: "Get buy request by ID",
+        tags: ["buy-requests"],
+        params: z.object({
+          id: z.string(),
         }),
       },
     },
-    async handler(request, reply) {
+    async (request, reply) => {
       const { id } = request.params as { id: string };
 
       const buyRequest = await request.ctx.prisma.buyRequest.findUnique({
@@ -139,25 +144,18 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         updatedAt: buyRequest.updatedAt.toISOString(),
       };
     },
-  });
+  );
 
   // POST /buy-requests - Create buy request
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "POST",
-    url: "/",
-    schema: {
-      description: "Create new buy request",
-      tags: ["buy-requests"],
-      body: createBuyRequestSchema,
-      response: {
-        201: buyRequestSchema,
-        400: z.object({
-          error: z.string(),
-          code: z.string(),
-        }),
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    "/",
+    {
+      schema: {
+        description: "Create new buy request",
+        tags: ["buy-requests"],
       },
     },
-    async handler(request, reply) {
+    async (request, reply) => {
       const data = request.body as any;
 
       try {
@@ -178,32 +176,21 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         });
       }
     },
-  });
+  );
 
   // PUT /buy-requests/:id - Update buy request
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "PUT",
-    url: "/:id",
-    schema: {
-      description: "Update buy request",
-      tags: ["buy-requests"],
-      params: z.object({
-        id: z.string(),
-      }),
-      body: updateBuyRequestSchema,
-      response: {
-        200: buyRequestSchema,
-        404: z.object({
-          error: z.string(),
-          code: z.string(),
-        }),
-        400: z.object({
-          error: z.string(),
-          code: z.string(),
+  fastify.withTypeProvider<ZodTypeProvider>().put(
+    "/:id",
+    {
+      schema: {
+        description: "Update buy request",
+        tags: ["buy-requests"],
+        params: z.object({
+          id: z.string(),
         }),
       },
     },
-    async handler(request, reply) {
+    async (request, reply) => {
       const { id } = request.params as { id: string };
       const data = request.body as any;
 
@@ -234,7 +221,7 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         });
       }
     },
-  });
+  );
 
   // DELETE /buy-requests/:id - Delete buy request
   fastify.withTypeProvider<ZodTypeProvider>().delete(

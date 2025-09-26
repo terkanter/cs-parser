@@ -11,17 +11,41 @@ export const dataProvider = {
   getList: async (resource: string, params: any) => {
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
-    const query = {
-      sort: JSON.stringify([field, order]),
-      range: JSON.stringify([(page - 1) * perPage, page * perPage - 1]),
-      filter: JSON.stringify(params.filter),
+
+    // Build query params for our API
+    const query: any = {
+      page,
+      perPage,
     };
 
+    // Add sorting if provided
+    if (field && order) {
+      query.sort = field;
+      query.order = order;
+    }
+
+    // Add filters
+    Object.keys(params.filter || {}).forEach((key) => {
+      if (params.filter[key] !== undefined) {
+        query[key] = params.filter[key];
+      }
+    });
+
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const { json, headers } = await httpClient(url, { signal: params.signal });
+    const { json } = await httpClient(url, { signal: params.signal });
+
+    // Handle our API response format: {data: [...], pagination: {...}}
+    if (json.data && json.pagination) {
+      return {
+        data: json.data,
+        total: json.pagination.total,
+      };
+    }
+
+    // Fallback for other APIs that return data directly
     return {
-      data: json,
-      total: Number.parseInt(headers.get("content-range")?.split("/").pop() || "0", 10),
+      data: Array.isArray(json) ? json : [json],
+      total: Array.isArray(json) ? json.length : 1,
     };
   },
 
