@@ -8,10 +8,24 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 export async function registerBetterAuthHandler(fastify: FastifyInstance) {
   // Register authentication endpoint with catch-all route
   fastify.route({
-    method: ["GET", "POST"],
+    method: ["GET", "POST", "OPTIONS"],
     url: "/auth/*",
     async handler(request: FastifyRequest, reply: FastifyReply) {
       try {
+        // Add CORS headers manually for Better Auth routes
+        reply.header("Access-Control-Allow-Origin", request.headers.origin || "*");
+        reply.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+        reply.header(
+          "Access-Control-Allow-Headers",
+          "Content-Type, Authorization, X-Requested-With, Cookie, Set-Cookie",
+        );
+        reply.header("Access-Control-Allow-Credentials", "true");
+
+        // Handle preflight OPTIONS requests
+        if (request.method === "OPTIONS") {
+          return reply.status(200).send();
+        }
+
         // Construct request URL
         const url = new URL(request.url, `http://${request.headers.host}`);
 

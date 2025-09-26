@@ -8,6 +8,12 @@ import type { AuthProvider } from "ra-core";
 export const authProvider: AuthProvider = {
   login: async ({ email, password }) => {
     try {
+      // await authClient.signUp.email({
+      //   email: "admin@admin.com",
+      //   password: "admin123",
+      //   name: "admin",
+      // });
+
       const response = await authClient.signIn.email({
         email,
         password,

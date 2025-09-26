@@ -1,13 +1,12 @@
-import { ajvPlugins } from "@/api-lib/ajv-plugins";
 import { errorHandler } from "@/api-lib/error-handler";
 import routes from "@/api/index";
+import { registerCorsConfig } from "@/auth/cors-config";
 import { plugins } from "@/plugins/index";
 import { asyncLocalStorage } from "@/utils/async-local-storage";
 import { getLogger } from "@/utils/logger";
-import fastifyCors from "@fastify/cors";
-import { type TypeBoxTypeProvider, TypeBoxValidatorCompiler } from "@fastify/type-provider-typebox";
 import Fastify from "fastify";
 import fp from "fastify-plugin";
+import { type ZodTypeProvider, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 import { nanoid } from "nanoid";
 
 export async function startServer({ port }: { port: number }) {
@@ -17,13 +16,11 @@ export async function startServer({ port }: { port: number }) {
     // @ts-ignore
     loggerInstance: logger,
     disableRequestLogging: true,
-    ajv: {
-      plugins: ajvPlugins,
-    },
     genReqId: () => nanoid(12),
   })
-    .withTypeProvider<TypeBoxTypeProvider>()
-    .setValidatorCompiler(TypeBoxValidatorCompiler);
+    .withTypeProvider<ZodTypeProvider>()
+    .setValidatorCompiler(validatorCompiler)
+    .setSerializerCompiler(serializerCompiler);
 
   fastify.addHook("onRequest", (request, _reply, done) => {
     const logger = fastify.log.withContext({ reqId: request.id });
@@ -31,19 +28,13 @@ export async function startServer({ port }: { port: number }) {
     asyncLocalStorage.run({ logger }, done);
   });
 
+  // Register Better Auth specific CORS configuration FIRST
+  fastify.register(registerCorsConfig);
+
   fastify.register(fp(plugins));
 
   fastify.setErrorHandler(errorHandler);
 
-  // Function to validate CORS origin
-  const corsOptions = {
-    origin: (origin, cb) => {
-      // @todo - Add logic to validate origin this is a secuity risk
-      return cb(null, true);
-    },
-  };
-
-  fastify.register(fastifyCors, corsOptions);
   fastify.register(routes);
   fastify.log.disableLogging();
 

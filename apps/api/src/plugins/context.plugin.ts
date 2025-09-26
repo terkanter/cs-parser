@@ -1,5 +1,6 @@
 import { ApiContext } from "@/api-lib/context";
 import { extractSessionFromRequest } from "@/auth/session-extractor";
+import type { AuthSession, AuthUser } from "@/auth/types";
 import { removeQueryParametersFromPath } from "@/utils/remove-query-params";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
@@ -8,7 +9,8 @@ import type { LogLayer } from "loglayer";
 declare module "fastify" {
   interface FastifyRequest {
     ctx: ApiContext;
-    userId?: string;
+    user?: AuthUser | null;
+    session?: AuthSession | null;
   }
 }
 
@@ -31,7 +33,8 @@ async function plugin(fastify: FastifyInstance, _opts) {
     }
 
     // Set userId for easy access
-    request.userId = sessionResult.userId;
+    request.user = sessionResult.user;
+    request.session = sessionResult.session;
 
     // Create API context with session data
     request.ctx = new ApiContext({

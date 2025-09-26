@@ -1,13 +1,13 @@
+import {
+  getPaginationMeta,
+  getPaginationParams,
+  paginationMetaSchema,
+  paginationParamsSchema,
+} from "@/utils/pagination";
+import { Platform } from "@repo/prisma";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { Platform } from "@repo/prisma";
-import {
-  paginationParamsSchema,
-  getPaginationParams,
-  getPaginationMeta,
-  paginationMetaSchema,
-} from "@/utils/pagination";
 
 const platformSchema = z.nativeEnum(Platform);
 
@@ -69,8 +69,6 @@ const listQuerySchema = paginationParamsSchema.extend({
 });
 
 export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
-  const prisma = fastify.prisma;
-
   // GET /buy-requests - List buy requests
   fastify.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",
@@ -87,7 +85,12 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       },
     },
     async handler(request) {
-      const { page, perPage, platform, isActive } = request.query;
+      const { page, perPage, platform, isActive } = request.query as {
+        page: number;
+        perPage: number;
+        platform: Platform;
+        isActive: boolean;
+      };
       const { take, skip } = getPaginationParams({ page, perPage });
 
       const where: any = {};
@@ -95,13 +98,13 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       if (isActive !== undefined) where.isActive = isActive;
 
       const [data, total] = await Promise.all([
-        prisma.buyRequest.findMany({
+        request.ctx.prisma.buyRequest.findMany({
           where,
           skip,
           take,
           orderBy: { createdAt: "desc" },
         }),
-        prisma.buyRequest.count({ where }),
+        request.ctx.prisma.buyRequest.count({ where }),
       ]);
 
       return {
@@ -134,9 +137,9 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       },
     },
     async handler(request, reply) {
-      const { id } = request.params;
+      const { id } = request.params as { id: string };
 
-      const buyRequest = await prisma.buyRequest.findUnique({
+      const buyRequest = await request.ctx.prisma.buyRequest.findUnique({
         where: { id },
       });
 
@@ -172,10 +175,10 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       },
     },
     async handler(request, reply) {
-      const data = request.body;
+      const data = request.body as any;
 
       try {
-        const buyRequest = await prisma.buyRequest.create({
+        const buyRequest = await request.ctx.prisma.buyRequest.create({
           data,
         });
 
@@ -218,11 +221,11 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       },
     },
     async handler(request, reply) {
-      const { id } = request.params;
-      const data = request.body;
+      const { id } = request.params as { id: string };
+      const data = request.body as any;
 
       try {
-        const buyRequest = await prisma.buyRequest.update({
+        const buyRequest = await request.ctx.prisma.buyRequest.update({
           where: { id },
           data,
         });
@@ -251,28 +254,29 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
   });
 
   // DELETE /buy-requests/:id - Delete buy request
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "DELETE",
-    url: "/:id",
-    schema: {
-      description: "Delete buy request",
-      tags: ["buy-requests"],
-      params: z.object({
-        id: z.string(),
-      }),
-      response: {
-        204: z.undefined(),
-        404: z.object({
-          error: z.string(),
-          code: z.string(),
+  fastify.withTypeProvider<ZodTypeProvider>().delete(
+    "/:id",
+    {
+      schema: {
+        description: "Delete buy request",
+        tags: ["buy-requests"],
+        params: z.object({
+          id: z.string(),
         }),
+        response: {
+          204: z.undefined(),
+          404: z.object({
+            error: z.string(),
+            code: z.string(),
+          }),
+        },
       },
     },
-    async handler(request, reply) {
-      const { id } = request.params;
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
 
       try {
-        await prisma.buyRequest.delete({
+        await request.ctx.prisma.buyRequest.delete({
           where: { id },
         });
 
@@ -293,5 +297,5 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         });
       }
     },
-  });
+  );
 }

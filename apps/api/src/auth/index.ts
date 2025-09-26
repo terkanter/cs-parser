@@ -21,13 +21,20 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      role: {
+      telegramId: {
         type: "string",
-        defaultValue: "user",
       },
     },
   },
-  trustedOrigins: ["http://localhost:3000", "http://localhost:3080", env.FRONTEND_URL || ""].filter(Boolean),
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3080",
+    "http://localhost:5173", // Vite default
+    "http://localhost:5174",
+    "http://localhost:4173", // Vite preview
+    env.FRONTEND_URL || "",
+  ].filter(Boolean),
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   logger: {

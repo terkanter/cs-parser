@@ -1,12 +1,24 @@
 import { IS_PROD } from "@/constants";
 import { removeQueryParametersFromPath } from "@/utils/remove-query-params";
 import { ApiError, BackendErrorCodes, createApiError } from "@repo/api-errors";
+import { ZodError } from "zod";
 
 export function errorHandler(error: any, request, reply) {
   if (request.url) {
     request.log.withContext({
       apiPath: removeQueryParametersFromPath(request.url),
     });
+  }
+
+  if (error instanceof ZodError) {
+    const e = createApiError({
+      code: BackendErrorCodes.INPUT_VALIDATION_ERROR,
+      causedBy: error,
+    });
+
+    e.reqId = request.id;
+
+    reply.status(e.statusCode).send(IS_PROD ? e.toJSONSafe() : e.toJSON());
   }
 
   if (error instanceof ApiError) {

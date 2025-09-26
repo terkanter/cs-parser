@@ -59,16 +59,16 @@ async function generateOpenAPISchema() {
     throw new Error("@fastify/swagger plugin is not loaded");
   }
 
-  console.log("Generating backend-client OpenAPI schema...");
+  console.log("Generating api-client OpenAPI schema...");
 
   const schema = stringify(fastify.swagger());
-  await writeFile(path.join(__dirname, "..", "..", "..", "packages", "backend-client", "openapi.yml"), schema, {
+  await writeFile(path.join(__dirname, "..", "..", "..", "packages", "api-client", "openapi.yml"), schema, {
     flag: "w+",
   });
 
   await fastify.close();
 
-  console.log("Generation of backend-client OpenAPI schema completed.");
+  console.log("Generation of api-client OpenAPI schema completed.");
 }
 
 // Run the generator

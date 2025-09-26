@@ -8,33 +8,33 @@ const userSchema = z.object({
   name: z.string(),
   image: z.string().nullable(),
   telegramId: z.string().nullable(),
-  role: z.string(),
   emailVerified: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
-const updateUserSchema = z.object({
+const updateUserBodySchema = z.object({
   name: z.string().optional(),
   telegramId: z.string().nullable().optional(),
 });
 
 export async function registerUserMeRoute(fastify: FastifyInstance) {
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "GET",
-    url: "/me",
-    schema: {
-      description: "Get current user profile",
-      tags: ["users"],
-      response: {
-        200: userSchema,
-        401: z.object({
-          error: z.string(),
-          code: z.string(),
-        }),
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    "/me",
+    {
+      schema: {
+        description: "Get current user profile",
+        tags: ["users"],
+        response: {
+          200: userSchema,
+          401: z.object({
+            error: z.string(),
+            code: z.string(),
+          }),
+        },
       },
     },
-    async handler(request, reply) {
+    async (request, reply) => {
       try {
         // Check if user is authenticated through our context
         if (!request.ctx.isAuthenticated) {
@@ -51,8 +51,7 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
           email: user.email,
           name: user.name,
           image: user.image,
-          telegramId: user.telegramId,
-          role: user.role || "user",
+          telegramId: user.telegramId || null,
           emailVerified: user.emailVerified,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
@@ -65,29 +64,31 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         });
       }
     },
-  });
+  );
 
   // PUT /me - Update current user profile
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "PUT",
-    url: "/me",
-    schema: {
-      description: "Update current user profile",
-      tags: ["users"],
-      body: updateUserSchema,
-      response: {
-        200: userSchema,
-        401: z.object({
-          error: z.string(),
-          code: z.string(),
-        }),
-        400: z.object({
-          error: z.string(),
-          code: z.string(),
-        }),
+  fastify.withTypeProvider<ZodTypeProvider>().put(
+    "/me",
+    {
+      schema: {
+        description: "Update current user profile",
+        tags: ["users"],
+        operationId: "updateUserProfile",
+        body: updateUserBodySchema,
+        response: {
+          200: userSchema,
+          401: z.object({
+            error: z.string(),
+            code: z.string(),
+          }),
+          400: z.object({
+            error: z.string(),
+            code: z.string(),
+          }),
+        },
       },
     },
-    async handler(request, reply) {
+    async (request, reply) => {
       try {
         // Check if user is authenticated
         if (!request.ctx.isAuthenticated) {
@@ -98,13 +99,13 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         }
 
         const { user } = request.ctx.requireAuth();
-        const updateData = request.body;
+        const { telegramId } = request.body as { telegramId: string | null };
 
         // Check if telegramId is already taken by another user
-        if (updateData.telegramId) {
-          const existingUser = await fastify.prisma.user.findFirst({
+        if (telegramId) {
+          const existingUser = await request.ctx.prisma.user.findFirst({
             where: {
-              telegramId: updateData.telegramId,
+              telegramId,
               NOT: {
                 id: user.id,
               },
@@ -120,9 +121,9 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         }
 
         // Update user
-        const updatedUser = await fastify.prisma.user.update({
-          where: { id: user.id },
-          data: updateData,
+        const updatedUser = await request.ctx.prisma.user.update({
+          where: { id: user!.id },
+          data: { telegramId },
         });
 
         return {
@@ -131,7 +132,6 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
           name: updatedUser.name,
           image: updatedUser.image,
           telegramId: updatedUser.telegramId,
-          role: updatedUser.role || "user",
           emailVerified: updatedUser.emailVerified,
           createdAt: updatedUser.createdAt.toISOString(),
           updatedAt: updatedUser.updatedAt.toISOString(),
@@ -144,5 +144,5 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         });
       }
     },
-  });
+  );
 }
