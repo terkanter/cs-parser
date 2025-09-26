@@ -1,9 +1,4 @@
-import {
-  getPaginationMeta,
-  getPaginationParams,
-  paginationMetaSchema,
-  paginationParamsSchema,
-} from "@/utils/pagination";
+import { getPaginationMeta, getPaginationParams } from "@/utils/pagination";
 import { Platform } from "@repo/prisma";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -63,34 +58,22 @@ const updateBuyRequestSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-const listQuerySchema = paginationParamsSchema.extend({
-  platform: platformSchema.optional(),
-  isActive: z.boolean().optional(),
-});
-
 export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
   // GET /buy-requests - List buy requests
-  fastify.withTypeProvider<ZodTypeProvider>().route({
-    method: "GET",
-    url: "/",
-    schema: {
-      description: "List buy requests",
-      tags: ["buy-requests"],
-      querystring: listQuerySchema,
-      response: {
-        200: z.object({
-          data: z.array(buyRequestSchema),
-          pagination: paginationMetaSchema,
-        }),
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    "/",
+    {
+      schema: {
+        description: "List buy requests",
+        tags: ["buy-requests"],
       },
     },
-    async handler(request) {
-      const { page, perPage, platform, isActive } = request.query as {
-        page: number;
-        perPage: number;
-        platform: Platform;
-        isActive: boolean;
-      };
+    async (request) => {
+      const query = request.query as any;
+      const page = Number(query.page) || 1;
+      const perPage = Number(query.perPage) || 10;
+      const platform = query.platform as Platform | undefined;
+      const isActive = query.isActive !== undefined ? query.isActive === "true" : undefined;
       const { take, skip } = getPaginationParams({ page, perPage });
 
       const where: any = {};
@@ -116,7 +99,7 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
         pagination: getPaginationMeta({ page, perPage }, total),
       };
     },
-  });
+  );
 
   // GET /buy-requests/:id - Get single buy request
   fastify.withTypeProvider<ZodTypeProvider>().route({

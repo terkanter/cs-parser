@@ -11,7 +11,7 @@ import {
   useSidebar,
 } from "@/shared/components/ui/sidebar";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { House, List, Shell } from "lucide-react";
+import { House, List, Settings, Shell } from "lucide-react";
 import {
   useCanAccess,
   useCreatePath,
@@ -56,6 +56,7 @@ export function AppSidebar() {
                 .map((name) => (
                   <ResourceMenuItem key={name} name={name} onClick={handleClick} />
                 ))}
+              <SettingsMenuItem onClick={handleClick} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -115,6 +116,25 @@ export const ResourceMenuItem = ({
         <Link to={to} state={{ _scrollToTop: true }} onClick={onClick}>
           {resources[name].icon ? createElement(resources[name].icon) : <List />}
           {getResourceLabel(name, 2)}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+};
+
+export const SettingsMenuItem = ({ onClick }: { onClick?: () => void }) => {
+  const translate = useTranslate();
+  const label = translate("ra.page.settings", {
+    _: "Settings",
+  });
+  const match = useMatch({ path: "/settings", end: true });
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={!!match}>
+        <Link to="/settings" onClick={onClick}>
+          <Settings />
+          {label}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
