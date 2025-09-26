@@ -1,5 +1,5 @@
 {
-  "name": "@repo/backend-client",
+  "name": "@repo/api-client",
   "description": "Client to call backend.",
   "version": "1.0.0",
   "private": true,
@@ -24,7 +24,7 @@
     "@hey-api/openapi-ts": "0.67.6",
     "@hey-api/client-fetch": "0.10.1",
     "@repo/tsconfig": "workspace:*",
-    "@repo/backend": "workspace:*",
+    "@repo/api": "workspace:*",
     "hash-runner": "2.0.1",
     "tsup": "8.5.0"
   }

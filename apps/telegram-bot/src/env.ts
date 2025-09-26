@@ -1,7 +1,13 @@
+import { config } from "@dotenvx/dotenvx";
 import { z } from "zod";
-import { config } from "dotenv";
 
-config();
+config({
+  quiet: true,
+});
+
+const patchedEnv = {
+  ...process.env,
+};
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
@@ -12,4 +18,4 @@ const envSchema = z.object({
   WEBHOOK_SECRET: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+export const env = envSchema.parse(patchedEnv);

@@ -1,8 +1,9 @@
+import type { BuyRequestQuery } from "@repo/api-core";
 import { type BuyRequest, prisma } from "@repo/prisma";
-import { rabbitmqService } from "./rabbitmq";
-import { lisSkinsParser, type BuyRequestQuery } from "../parsers/lis-skins";
 import { env } from "../env";
+import { lisSkinsParser } from "../parsers/lis-skins";
 import { logger } from "../utils/logger";
+import { rabbitmqService } from "./rabbitmq";
 
 class ParserScheduler {
   private isRunning = false;
@@ -62,18 +63,18 @@ class ParserScheduler {
         try {
           await this.processBuyRequest(buyRequest);
         } catch (error) {
-          logger.error(error, `Error processing buy request ${buyRequest.id}`);
+          logger.withError(error).error(`Error processing buy request ${buyRequest.id}`);
         }
       }
 
       logger.info("Parsing cycle completed");
     } catch (error) {
-      logger.error(error, "Error in parsing cycle");
+      logger.withError(error).error("Error in parsing cycle");
     }
   }
 
   private async processBuyRequest(buyRequest: BuyRequest): Promise<void> {
-    logger.debug({ buyRequestId: buyRequest.id }, "Processing buy request");
+    logger.withContext({ buyRequestId: buyRequest.id }).debug("Processing buy request");
 
     // Parse the query JSON
     const query = buyRequest.query as BuyRequestQuery;
@@ -91,10 +92,9 @@ class ParserScheduler {
         foundAt: new Date(),
       });
 
-      logger.info(
-        { buyRequestId: buyRequest.id, itemName: item.name, price: item.price },
-        `Found matching item: ${item.name} - ${item.price}₽`,
-      );
+      logger
+        .withContext({ buyRequestId: buyRequest.id, itemName: item.name, price: item.price })
+        .info(`Found matching item: ${item.name} - ${item.price}₽`);
     }
   }
 }

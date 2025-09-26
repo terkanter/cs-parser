@@ -8,7 +8,7 @@ pre-commit:
         - lint
         - staged-lint
       exclude:
-        - "packages/backend-client/src/*.ts"
+        - "packages/api-client/src/*.ts"
     "check and format package.json files":
       glob: "**/package.json"
       run: pnpm run syncpack:format  && pnpm run syncpack:lint

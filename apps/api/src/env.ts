@@ -31,6 +31,5 @@ export const env = parseEnv(patchedEnv, {
 });
 
 // Convenience exports
-export const IS_PROD = env.NODE_ENV === "production";
-export const IS_TEST = env.NODE_ENV === "test";
+// IS_PROD and IS_TEST are now exported from @repo/api-core
 export const IS_DEV = env.NODE_ENV === "development";

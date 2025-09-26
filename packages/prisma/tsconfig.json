@@ -2,8 +2,12 @@
   "extends": "../../packages/tsconfig/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "generated/client/**/*"],
   "exclude": ["node_modules", "dist"]
 }

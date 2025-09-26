@@ -7,6 +7,7 @@
   ],
   "tasks": {
     "build:dev": {
+      "dependsOn": ["^build"],
       "cache": false
     },
     "build": {
@@ -15,25 +16,14 @@
     },
     "verify-types": {},
     "lint": {},
-    "test:ci": {
-      "dependsOn": ["@repo/backend-errors#build:dev"],
-      "persistent": false,
-      "cache": false
-    },
-    "test": {
-      "dependsOn": ["@repo/backend-errors#build:dev"],
-      "interactive": true,
-      "persistent": true,
-      "cache": false
-    },
-    "build:backend": {
-      "dependsOn": ["@repo/backend#lint", "@repo/backend#build:dev"],
+    "build:api": {
+      "dependsOn": ["@repo/api#lint", "@repo/api#build:dev"],
       "cache": true,
-      "inputs": ["apps/backend-api/**", "!apps/backend-api/dist/**"],
-      "outputs": ["apps/backend/dist/**"]
+      "inputs": ["apps/api/**", "!apps/api/dist/**"],
+      "outputs": ["apps/api/dist/**"]
     },
     "generate:sdk": {
-      "dependsOn": ["@repo/backend-client#build:dev"],
+      "dependsOn": ["@repo/api-client#build:dev"],
       "cache": true
     },
     "dev": {

@@ -2,7 +2,6 @@
   "name": "@repo/telegram-bot",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
@@ -10,15 +9,15 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "1.44.1",
     "@repo/prisma": "workspace:*",
-    "@repo/backend-errors": "workspace:*",
+    "@repo/api-errors": "workspace:*",
+    "@repo/api-core": "workspace:*",
     "@prisma/client": "^5.6.0",
     "amqplib": "^0.10.3",
     "grammy": "^1.21.1",
     "zod": "^3.22.4",
-    "dotenv": "^16.3.1",
-    "pino": "^8.16.0",
-    "pino-pretty": "^10.2.0"
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

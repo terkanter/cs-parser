@@ -1,4 +1,8 @@
-import { IS_PROD, IS_TEST, env } from "./env";
+import { IS_DEV, env } from "./env";
+
+// Local environment booleans
+export const IS_PROD = env.NODE_ENV === "production";
+export const IS_TEST = env.NODE_ENV === "test";
 
 // Re-export commonly used constants
 export const SERVER_PORT = env.SERVER_PORT;
@@ -12,4 +16,4 @@ export const BETTER_AUTH_URL = env.BETTER_AUTH_URL;
 export const FRONTEND_URL = env.FRONTEND_URL;
 
 // Re-export convenience booleans
-export { IS_PROD, IS_TEST };
+export { IS_DEV };

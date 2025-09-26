@@ -1,8 +1,8 @@
-import { Bot, type Context, session, type SessionFlavor } from "grammy";
-import { env } from "../env";
-import { logger } from "../utils/logger";
-import type { FoundItemMessage } from "../services/rabbitmq";
 import { prisma } from "@repo/prisma";
+import { Bot, type Context, type SessionFlavor, session } from "grammy";
+import { env } from "../env";
+import type { FoundItemMessage } from "../services/rabbitmq";
+import { logger } from "../utils/logger";
 
 interface SessionData {
   step?: string;
@@ -73,7 +73,7 @@ export class TelegramBot {
           { parse_mode: "Markdown" },
         );
       } catch (error) {
-        logger.error(error, "Error in link command");
+        logger.withError(error).error("Error in link command");
         await ctx.reply("❌ Произошла ошибка. Попробуйте позже.");
       }
     });
@@ -100,7 +100,7 @@ export class TelegramBot {
 
         await ctx.reply("✅ Аккаунт успешно отвязан!");
       } catch (error) {
-        logger.error(error, "Error in unlink command");
+        logger.withError(error).error("Error in unlink command");
         await ctx.reply("❌ Произошла ошибка. Попробуйте позже.");
       }
     });
@@ -127,7 +127,7 @@ export class TelegramBot {
             `🆔 Telegram ID: ${telegramId}`,
         );
       } catch (error) {
-        logger.error(error, "Error in status command");
+        logger.withError(error).error("Error in status command");
         await ctx.reply("❌ Произошла ошибка. Попробуйте позже.");
       }
     });
@@ -153,13 +153,15 @@ export class TelegramBot {
   }
 
   async sendFoundItemNotification(userId: string, message: FoundItemMessage): Promise<void> {
+    logger.withContext({ userId });
+
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
       });
 
       if (!user || !user.telegramId) {
-        logger.warn({ userId }, `User ${userId} has no Telegram ID`);
+        logger.warn(`User ${userId} has no Telegram ID`);
         return;
       }
 
@@ -176,12 +178,12 @@ export class TelegramBot {
 
       await this.bot.api.sendMessage(user.telegramId, text, {
         parse_mode: "Markdown",
-        disable_web_page_preview: true,
+        // disable_web_page_preview: true,
       });
 
-      logger.info({ userId }, `Sent notification to user ${userId}`);
+      logger.info(`Sent notification to user ${userId}`);
     } catch (error) {
-      logger.error(error, "Error sending notification");
+      logger.withError(error).error("Error sending notification");
     }
   }
 

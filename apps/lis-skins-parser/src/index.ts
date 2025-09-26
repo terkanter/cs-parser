@@ -1,11 +1,10 @@
 import { connectDatabase, disconnectDatabase } from "./services/database";
-import { rabbitmqService } from "./services/rabbitmq";
 import { parserScheduler } from "./services/parser-scheduler";
-import { env } from "./env";
+import { rabbitmqService } from "./services/rabbitmq";
 import { logger } from "./utils/logger";
 
 async function main() {
-  logger.info({ environment: env.NODE_ENV }, "Starting LIS Skins Parser...");
+  logger.info("Starting LIS Skins Parser...");
 
   try {
     // Connect to services
@@ -21,7 +20,7 @@ async function main() {
     process.on("SIGINT", shutdown);
     process.on("SIGTERM", shutdown);
   } catch (error) {
-    logger.error(error, "Failed to start LIS Skins Parser");
+    logger.withError(error).error("Failed to start LIS Skins Parser");
     process.exit(1);
   }
 }
@@ -37,12 +36,12 @@ async function shutdown() {
     logger.info("LIS Skins Parser shut down gracefully");
     process.exit(0);
   } catch (error) {
-    logger.error(error, "Error during shutdown");
+    logger.withError(error).error("Error during shutdown");
     process.exit(1);
   }
 }
 
 main().catch((error) => {
-  logger.error(error, "Unhandled error");
+  logger.withError(error).error("Unhandled error");
   process.exit(1);
 });

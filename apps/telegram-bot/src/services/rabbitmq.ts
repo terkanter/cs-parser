@@ -1,3 +1,4 @@
+import { QUEUES } from "@repo/api-core";
 import amqp from "amqplib";
 import { env } from "../env";
 import { logger } from "../utils/logger";
@@ -28,11 +29,11 @@ class RabbitMQConsumer {
       this.channel = await this.connection.createChannel();
 
       // Ensure the queue exists
-      await this.channel.assertQueue("telegram.notifications", { durable: true });
+      await this.channel.assertQueue(QUEUES.TELEGRAM_NOTIFICATIONS, { durable: true });
 
       logger.info("RabbitMQ consumer connected successfully");
     } catch (error) {
-      logger.error(error, "Failed to connect to RabbitMQ");
+      logger.withError(error).error("Failed to connect to RabbitMQ");
       throw error;
     }
   }
@@ -45,7 +46,7 @@ class RabbitMQConsumer {
     // Set QoS to process one message at a time
     await this.channel.prefetch(1);
 
-    await this.channel.consume("telegram.notifications", async (msg) => {
+    await this.channel.consume(QUEUES.TELEGRAM_NOTIFICATIONS, async (msg) => {
       if (!msg) return;
 
       try {
@@ -54,9 +55,9 @@ class RabbitMQConsumer {
 
         // Acknowledge the message
         this.channel!.ack(msg);
-        logger.info({ buyRequestId: message.buyRequestId }, "Processed notification message");
+        logger.withContext({ buyRequestId: message.buyRequestId }).info("Processed notification message");
       } catch (error) {
-        logger.error(error, "Error processing message");
+        logger.withError(error).error("Error processing message");
 
         // Reject and requeue the message
         this.channel!.nack(msg, false, true);

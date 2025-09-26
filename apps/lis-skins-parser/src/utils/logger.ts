@@ -1,18 +1,8 @@
-import pino from "pino";
+import { createLogger } from "@repo/api-core";
 import { env } from "../env";
 
-export const logger = pino({
+export const logger = createLogger({
   name: "lis-parser",
   level: env.NODE_ENV === "development" ? "debug" : "info",
-  transport:
-    env.NODE_ENV === "development"
-      ? {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-            translateTime: "SYS:standard",
-            ignore: "pid,hostname",
-          },
-        }
-      : undefined,
+  environment: env.NODE_ENV,
 });

@@ -126,7 +126,7 @@ Generators for the following:
 ### turbo watch dev failing
 
 ```
-• Packages in scope: @repo/backend, @repo/backend-client, @repo/backend-errors, @repo/tsconfig
+• Packages in scope: @repo/api, @repo/api-client, @repo/api-errors, @repo/tsconfig
 • Running dev in 4 packages
 • Remote caching disabled
   × failed to connect to daemon
@@ -142,7 +142,7 @@ Then try running `turbo watch dev` again.
 If you get:
 
 ```
-• Packages in scope: @repo/backend, @repo/backend-client, @repo/backend-errors, @repo/tsconfig
+• Packages in scope: @repo/api, @repo/api-client, @repo/api-errors, @repo/tsconfig
 • Running dev in 4 packages
 • Remote caching disabled
   × discovery failed: bad grpc status code: The operation was cancelled

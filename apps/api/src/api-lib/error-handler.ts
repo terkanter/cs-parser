@@ -1,6 +1,6 @@
 import { IS_PROD } from "@/constants";
 import { removeQueryParametersFromPath } from "@/utils/remove-query-params";
-import { ApiError, BackendErrorCodes, createApiError } from "@repo/backend-errors";
+import { ApiError, BackendErrorCodes, createApiError } from "@repo/api-errors";
 
 export function errorHandler(error: any, request, reply) {
   if (request.url) {

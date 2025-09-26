@@ -1,5 +1,5 @@
 {
-  "name": "@repo/backend-errors",
+  "name": "@repo/api-errors",
   "description": "Error emission and handling for the backend",
   "version": "1.0.0",
   "private": true,

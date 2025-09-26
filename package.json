@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "turbo watch dev",
+    "dev:web": "pnpm --filter ./apps/web dev",
+    "dev:api": "pnpm --filter ./apps/api dev",
     "add-changeset": "changeset add",
     "build": "turbo run build",
     "changeset": "changeset",

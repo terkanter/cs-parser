@@ -1,3 +1,4 @@
+import type { BuyRequestQuery } from "@repo/api-core";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { logger } from "../utils/logger";
@@ -12,27 +13,20 @@ export interface ParsedItem {
   imageUrl?: string;
 }
 
-export interface BuyRequestQuery {
-  price?: Array<{ gte?: number; lte?: number }>;
-  float?: Array<{ gte?: number; lte?: number }>;
-  paint_seed?: Array<{ gte?: number; lte?: number }>;
-  item?: string[];
-  quality?: string[];
-}
-
 class LisSkinsParser {
   private readonly baseUrl = "https://lis-skins.ru";
 
   async parseItems(query: BuyRequestQuery): Promise<ParsedItem[]> {
+    logger.withContext({ query });
     try {
       // This is a placeholder - you'll implement the actual parsing logic
-      logger.debug({ query }, "Parsing LIS Skins with query");
+      logger.debug("Parsing LIS Skins with query");
 
       // For now, return empty array
       // TODO: Implement actual parsing logic based on the query
       return [];
     } catch (error) {
-      logger.error(error, "Error parsing LIS Skins");
+      logger.withError(error).error("Error parsing LIS Skins");
       return [];
     }
   }
