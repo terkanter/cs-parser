@@ -35,6 +35,21 @@ services:
       - postgres
     restart: unless-stopped
 
+  rabbitmq:
+    container_name: rabbitmq_container
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-testing123}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"  # AMQP port
+      - "15672:15672"  # Management UI
+    networks:
+      - postgres
+    restart: unless-stopped
+
 networks:
   postgres:
     driver: bridge
@@ -42,3 +57,4 @@ networks:
 volumes:
   postgres:
   pgadmin:
+  rabbitmq_data:

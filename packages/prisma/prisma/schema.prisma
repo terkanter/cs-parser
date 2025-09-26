@@ -1,14 +1,15 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
-    output   = "../node_modules/.prisma/client"
+  provider = "prisma-client-js"
+}
+
+generator package {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Better Auth models
@@ -17,6 +18,7 @@ model User {
     email     String   @unique
     name      String
     image     String?
+    telegramId String? @unique @map("telegram_id")
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -74,4 +76,26 @@ model Verification {
 
     @@unique([identifier, value])
     @@map("verifications")
+}
+
+enum Platform {
+    LIS_SKINS
+    CS_MONEY
+    STEAM
+    BUFF163
+    SKINPORT
+    DMARKET
+
+    @@map("platforms")
+}
+
+model BuyRequest {
+    id        String   @id @default(cuid())
+    platform  Platform
+    query     Json
+    isActive  Boolean  @default(true) @map("is_active")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("buy_requests")
 }

@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "turbo watch dev",
+    "dev": "turbo watch dev",
     "add-changeset": "changeset add",
     "build": "turbo run build",
     "changeset": "changeset",

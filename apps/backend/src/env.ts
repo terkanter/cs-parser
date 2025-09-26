@@ -16,7 +16,7 @@ export const env = parseEnv(patchedEnv, {
   BACKEND_LOG_LEVEL: z.string().default("debug"),
 
   // Database
-  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().url(),
 
   // Better Auth configuration
   BETTER_AUTH_SECRET: z
