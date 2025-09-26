@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
+    "lint": "biome check --write --unsafe src && biome format src --write && biome lint src --fix",
     "build": "tsup",
     "clean": "rm -rf dist"
   },

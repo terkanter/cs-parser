@@ -13,6 +13,9 @@
     "enabled": true,
     "ignore": ["dist/*", ".pnpm-store/*", "packages/backend-client/*"],
     "rules": {
+      "style": {
+        "noNonNullAssertion": "off"
+      },
       "a11y": {
         "noNoninteractiveElementToInteractiveRole": "off",
         "useFocusableInteractive": "warn",
