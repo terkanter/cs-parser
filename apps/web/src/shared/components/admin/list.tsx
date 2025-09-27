@@ -93,7 +93,7 @@ export const ListView = <RecordType extends RaRecord = RaRecord>(props: ListView
       </Breadcrumb>
 
       <FilterContext.Provider value={filters}>
-        <div className="flex justify-between items-start flex-wrap gap-2 my-2">
+        <div className="flex justify-between items-start flex-wrap gap-2 mb-2">
           <h2 className="text-2xl font-bold tracking-tight mb-2">{finalTitle}</h2>
           {actions ?? (
             <div className="flex items-center gap-2">
