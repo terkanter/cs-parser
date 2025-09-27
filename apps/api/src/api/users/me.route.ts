@@ -2,18 +2,6 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
-const userSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-  name: z.string(),
-  image: z.string().nullable(),
-  telegramId: z.string().nullable(),
-  liskinsApiKey: z.string().nullable(),
-  emailVerified: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
 const updateUserBodySchema = z.object({
   name: z.string().optional(),
   telegramId: z.string().nullable().optional(),

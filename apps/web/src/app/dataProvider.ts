@@ -50,6 +50,16 @@ export const dataProvider = {
   },
 
   getOne: async (resource: string, params: any) => {
+    // Handle special case for users/me
+    if (resource === "users" && params.id === "me") {
+      const url = `${apiUrl}/users/me`;
+      const { json } = await httpClient(url, {
+        signal: params.signal,
+        credentials: "include",
+      });
+      return { data: json };
+    }
+
     const url = `${apiUrl}/${resource}/${params.id}`;
     const { json } = await httpClient(url, { signal: params.signal });
     return { data: json };
@@ -92,6 +102,17 @@ export const dataProvider = {
   },
 
   update: async (resource: string, params: any) => {
+    // Handle special case for users/me
+    if (resource === "users" && params.id === "me") {
+      const url = `${apiUrl}/users/me`;
+      const { json } = await httpClient(url, {
+        method: "PUT",
+        body: JSON.stringify(params.data),
+        credentials: "include",
+      });
+      return { data: json };
+    }
+
     const url = `${apiUrl}/${resource}/${params.id}`;
     const { json } = await httpClient(url, {
       method: "PUT",
