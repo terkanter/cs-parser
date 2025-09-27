@@ -2,57 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
-const updateUserBodySchema = z.object({
-  name: z.string().optional(),
-  telegramId: z.string().nullable().optional(),
-  liskinsApiKey: z.string().nullable().optional(),
-});
-
-export async function registerUserMeRoute(fastify: FastifyInstance) {
-  fastify.withTypeProvider<ZodTypeProvider>().get(
-    "/me",
-    {
-      schema: {
-        description: "Get current user profile",
-        tags: ["users"],
-      },
-    },
-    async (request, reply) => {
-      try {
-        // Check if user is authenticated through our context
-        if (!request.ctx.isAuthenticated) {
-          return reply.status(401).send({
-            error: "Authentication required",
-            code: "UNAUTHORIZED",
-          });
-        }
-
-        const { user } = request.ctx.requireAuth();
-
-        const userData = await request.ctx.prisma.user.findUnique({
-          where: { id: user.id },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-            telegramId: true,
-            liskinsApiKey: true,
-            emailVerified: true,
-          },
-        });
-
-        reply.status(200).send(userData);
-      } catch (error) {
-        request.log.error("Error getting user profile:", error);
-        return reply.status(500).send({
-          error: "Internal server error",
-          code: "INTERNAL_ERROR",
-        });
-      }
-    },
-  );
-
+export async function registerUserUpdateMeRoute(fastify: FastifyInstance) {
   // PUT /me - Update current user profile
   fastify.withTypeProvider<ZodTypeProvider>().put(
     "/me",
@@ -61,6 +11,9 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         description: "Update current user profile",
         tags: ["users"],
         operationId: "updateUserProfile",
+        params: z.object({
+          id: z.string(),
+        }),
       },
     },
     async (request, reply) => {
@@ -113,10 +66,16 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
             telegramId: true,
             liskinsApiKey: true,
             emailVerified: true,
+            createdAt: true,
+            updatedAt: true,
           },
         });
 
-        reply.status(200).send(updatedUser);
+        return reply.status(200).send({
+          ...updatedUser,
+          createdAt: updatedUser.createdAt.toISOString(),
+          updatedAt: updatedUser.updatedAt.toISOString(),
+        });
       } catch (error) {
         request.log.error("Error updating user profile:", error);
         return reply.status(500).send({

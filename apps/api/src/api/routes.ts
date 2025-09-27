@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { registerAuthRoutes } from "./auth/index";
 import { registerBuyRequestRoutes } from "./buy-requests/index";
-import { registerUserMeRoute } from "./users/me.route";
+import { registerUserRoutes } from "./users/index";
 
 export async function registerResourceRoutes(fastify: FastifyInstance, _opts) {
   fastify.register(routes, { prefix: "/api" });
@@ -14,7 +14,7 @@ async function routes(fastify: FastifyInstance) {
   // Register user routes
   fastify.register(
     async function userRoutes(fastify) {
-      await registerUserMeRoute(fastify);
+      await registerUserRoutes(fastify);
     },
     { prefix: "/users" },
   );
