@@ -86,7 +86,7 @@ export async function registerBuyRequestRoutes(fastify: FastifyInstance) {
       // Build order by clause
       const orderBy: any = {};
       if (sort && order) {
-        orderBy[sort] = order;
+        orderBy[sort] = order.toLowerCase();
       } else {
         orderBy.createdAt = "desc";
       }
