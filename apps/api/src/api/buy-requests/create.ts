@@ -17,11 +17,13 @@ export async function registerBuyRequestCreateRoute(fastify: FastifyInstance) {
     async (request, reply) => {
       const data = request.body;
 
+      const auth = request.ctx.requireAuth()
+
       try {
         const buyRequest = await request.ctx.prisma.buyRequest.create({
           data: {
             ...data,
-            createdByUserId: request.ctx.requireAuth().user.id,
+            createdByUserId: auth.user.id,
           },
         });
 

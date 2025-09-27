@@ -84,7 +84,7 @@ export const dataProvider = {
       filter: JSON.stringify({ ids: params.ids }),
     };
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const { json } = await httpClient(url, { signal: params.signal });
+    const { json } = await httpClient(url, { signal: params.signal, credentials: "include", });
     return { data: json };
   },
 
@@ -100,7 +100,7 @@ export const dataProvider = {
       }),
     };
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const { json, headers } = await httpClient(url, { signal: params.signal });
+    const { json, headers } = await httpClient(url, { signal: params.signal, credentials: "include", });
     return {
       data: json,
       total: Number.parseInt(headers.get("content-range")?.split("/").pop() || "0", 10),
@@ -111,6 +111,7 @@ export const dataProvider = {
     const { json } = await httpClient(`${apiUrl}/${resource}`, {
       method: "POST",
       body: JSON.stringify(params.data),
+      credentials: "include",
     });
     return { data: json };
   },
@@ -154,6 +155,7 @@ export const dataProvider = {
     const { json } = await httpClient(url, {
       method: "PUT",
       body: JSON.stringify(params.data),
+      credentials: "include",
     });
     return { data: json };
   },
@@ -162,6 +164,7 @@ export const dataProvider = {
     const url = `${apiUrl}/${resource}/${params.id}`;
     const { json } = await httpClient(url, {
       method: "DELETE",
+      credentials: "include",
     });
     return { data: json };
   },
@@ -173,6 +176,7 @@ export const dataProvider = {
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
     const { json } = await httpClient(url, {
       method: "DELETE",
+      credentials: "include",
       body: JSON.stringify(params.data),
     });
     return { data: json };
