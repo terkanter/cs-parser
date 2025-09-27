@@ -30,7 +30,6 @@ export async function registerUserGetMeRoute(fastify: FastifyInstance) {
             name: true,
             image: true,
             telegramId: true,
-            liskinsApiKey: true,
             emailVerified: true,
             createdAt: true,
             updatedAt: true,

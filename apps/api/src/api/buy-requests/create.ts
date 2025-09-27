@@ -1,18 +1,21 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { createBuyRequestSchema } from "@/schemas/buy-request";
+import { z } from "zod";
 
 export async function registerBuyRequestCreateRoute(fastify: FastifyInstance) {
   // POST /buy-requests - Create buy request
-  fastify.withTypeProvider<ZodTypeProvider>().post(
+  fastify.withTypeProvider<ZodTypeProvider>().post<{ Body: z.infer<typeof createBuyRequestSchema> }>(
     "/",
     {
       schema: {
         description: "Create new buy request",
         tags: ["buy-requests"],
+        body: createBuyRequestSchema,
       },
     },
     async (request, reply) => {
-      const data = request.body as any;
+      const data = request.body;
 
       try {
         const buyRequest = await request.ctx.prisma.buyRequest.create({

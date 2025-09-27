@@ -1,23 +1,27 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { updateBuyRequestSchema } from "@/schemas/buy-request";
+
+const paramsSchema = z.object({
+  id: z.string().uuid("Invalid UUID format"),
+});
 
 export async function registerBuyRequestEditRoute(fastify: FastifyInstance) {
   // PUT /buy-requests/:id - Update buy request
-  fastify.withTypeProvider<ZodTypeProvider>().put(
+  fastify.withTypeProvider<ZodTypeProvider>().put<{ Params: z.infer<typeof paramsSchema>; Body: z.infer<typeof updateBuyRequestSchema> }>(
     "/:id",
     {
       schema: {
         description: "Update buy request",
         tags: ["buy-requests"],
-        params: z.object({
-          id: z.string(),
-        }),
+        params: paramsSchema,
+        body: updateBuyRequestSchema,
       },
     },
     async (request, reply) => {
-      const { id } = request.params as { id: string };
-      const data = request.body as any;
+      const { id } = request.params;
+      const data = request.body;
 
       try {
         const buyRequest = await request.ctx.prisma.buyRequest.update({

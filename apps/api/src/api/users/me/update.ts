@@ -2,18 +2,21 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
+const bodySchema = z.object({
+  telegramId: z.string().nullable().optional(),
+  liskinsApiKey: z.string().nullable().optional(),
+});
+
 export async function registerUserUpdateMeRoute(fastify: FastifyInstance) {
   // PUT /me - Update current user profile
-  fastify.withTypeProvider<ZodTypeProvider>().put(
+  fastify.withTypeProvider<ZodTypeProvider>().put<{ Body: z.infer<typeof bodySchema> }>(
     "/me",
     {
       schema: {
         description: "Update current user profile",
         tags: ["users"],
         operationId: "updateUserProfile",
-        params: z.object({
-          id: z.string(),
-        }),
+        body: bodySchema,
       },
     },
     async (request, reply) => {
@@ -27,10 +30,7 @@ export async function registerUserUpdateMeRoute(fastify: FastifyInstance) {
         }
 
         const { user } = request.ctx.requireAuth();
-        const { telegramId, liskinsApiKey } = request.body as {
-          telegramId: string | null;
-          liskinsApiKey: string | null;
-        };
+        const { telegramId, liskinsApiKey } = request.body;
 
         // Check if telegramId is already taken by another user
         if (telegramId) {

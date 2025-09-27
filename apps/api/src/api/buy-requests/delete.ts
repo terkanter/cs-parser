@@ -2,21 +2,23 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
+const paramsSchema = z.object({
+  id: z.string().uuid("Invalid UUID format"),
+});
+
 export async function registerBuyRequestDeleteRoute(fastify: FastifyInstance) {
   // DELETE /buy-requests/:id - Delete buy request
-  fastify.withTypeProvider<ZodTypeProvider>().delete(
+  fastify.withTypeProvider<ZodTypeProvider>().delete<{ Params: z.infer<typeof paramsSchema> }>(
     "/:id",
     {
       schema: {
         description: "Delete buy request",
         tags: ["buy-requests"],
-        params: z.object({
-          id: z.string(),
-        }),
+        params: paramsSchema,
       },
     },
     async (request, reply) => {
-      const { id } = request.params as { id: string };
+      const { id } = request.params;
 
       try {
         await request.ctx.prisma.buyRequest.delete({
