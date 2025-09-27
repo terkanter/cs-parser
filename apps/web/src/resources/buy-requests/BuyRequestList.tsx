@@ -1,24 +1,16 @@
-import {
-  BooleanInput,
-  DataTable,
-  DateField,
-  List,
-  SearchInput,
-  SelectInput,
-  TextField,
-} from "@/shared/components/admin";
+import { BooleanInput, DataTable, DateField, List, TextField } from "@/shared/components/admin";
 import { Badge } from "@/shared/components/ui/badge";
 
 const BuyRequestFilter = [
-  <SearchInput key="search" source="q" alwaysOn />,
-  <SelectInput
-    key="platform"
-    source="platform"
-    choices={[
-      { id: "LIS_SKINS", name: "Lis Skins" },
-      { id: "CS_MONEY", name: "CS Money" },
-    ]}
-  />,
+  // <SearchInput key="search" source="q" alwaysOn />,
+  // <SelectInput
+  //   key="platform"
+  //   source="platform"
+  //   choices={[
+  //     { id: "LIS_SKINS", name: "Lis Skins" },
+  //     { id: "CS_MONEY", name: "CS Money" },
+  //   ]}
+  // />,
   <BooleanInput key="isActive" source="isActive" />,
 ];
 
