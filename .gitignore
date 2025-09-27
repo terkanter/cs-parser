@@ -3,3 +3,5 @@ node_modules
 packages/prisma/generated
 dist
 .idea
+
+.env

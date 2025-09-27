@@ -11,21 +11,24 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "1.44.1",
-    "@repo/prisma": "workspace:*",
-    "@repo/api-errors": "workspace:*",
-    "@repo/api-core": "workspace:*",
     "@prisma/client": "^5.6.0",
+    "@repo/api-core": "workspace:*",
+    "@repo/api-errors": "workspace:*",
+    "@repo/prisma": "workspace:*",
     "amqplib": "^0.10.3",
     "axios": "^1.6.0",
+    "centrifuge": "^5.4.0",
     "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
     "puppeteer": "^21.5.0",
-    "zod": "^3.22.4",
-    "dotenv": "^16.3.1"
+    "ws": "^8.18.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
     "@types/amqplib": "^0.10.4",
     "@types/node": "^20.8.0",
+    "@types/ws": "^8.5.10",
     "tsup": "^7.2.0",
     "tsx": "^3.14.0",
     "typescript": "^5.2.2"
