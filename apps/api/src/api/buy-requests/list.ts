@@ -1,5 +1,4 @@
 import { getPaginationMeta, getPaginationParams } from "@/utils/pagination";
-import type { Platform } from "@repo/prisma";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -11,10 +10,6 @@ const querySchema = z.object({
   isActive: z.coerce.boolean().optional(),
   sort: z.string().optional(),
   order: z.enum(["asc", "desc"]).optional(),
-});
-
-const paramsSchema = z.object({
-  id: z.string().uuid("Invalid UUID format"),
 });
 
 export async function registerBuyRequestListRoute(fastify: FastifyInstance) {
@@ -62,38 +57,6 @@ export async function registerBuyRequestListRoute(fastify: FastifyInstance) {
           updatedAt: item.updatedAt.toISOString(),
         })),
         pagination: getPaginationMeta({ page, perPage }, total),
-      };
-    },
-  );
-
-  // GET /buy-requests/:id - Get single buy request
-  fastify.withTypeProvider<ZodTypeProvider>().get<{ Params: z.infer<typeof paramsSchema> }>(
-    "/:id",
-    {
-      schema: {
-        description: "Get buy request by ID",
-        tags: ["buy-requests"],
-        params: paramsSchema,
-      },
-    },
-    async (request, reply) => {
-      const { id } = request.params;
-
-      const buyRequest = await request.ctx.prisma.buyRequest.findUnique({
-        where: { id },
-      });
-
-      if (!buyRequest) {
-        return reply.status(404).send({
-          error: "Buy request not found",
-          code: "NOT_FOUND",
-        });
-      }
-
-      return {
-        ...buyRequest,
-        createdAt: buyRequest.createdAt.toISOString(),
-        updatedAt: buyRequest.updatedAt.toISOString(),
       };
     },
   );

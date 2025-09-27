@@ -13,17 +13,13 @@ async function routes(fastify: FastifyInstance) {
 
   // Register user routes
   fastify.register(
-    async function userRoutes(fastify) {
-      await registerUserRoutes(fastify);
-    },
+    registerUserRoutes,
     { prefix: "/users" },
   );
 
   // Register buy request routes
   fastify.register(
-    async function buyRequestRoutes(fastify) {
-      await registerBuyRequestRoutes(fastify);
-    },
+    registerBuyRequestRoutes,
     { prefix: "/buy-requests" },
   );
 
