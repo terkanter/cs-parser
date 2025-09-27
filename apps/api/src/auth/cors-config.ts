@@ -7,12 +7,20 @@ import type { FastifyInstance } from "fastify";
  */
 export async function registerCorsConfig(fastify: FastifyInstance) {
   await fastify.register(fastifyCors, {
-    // Простая настройка - разрешаем все в development
+    // Разрешаем все origins в development
     origin: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
-    allowedHeaders: "*",
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "Cache-Control",
+      "X-HTTP-Method-Override",
+    ],
     credentials: true,
   });
 
-  fastify.log.info("CORS configured with simple settings");
+  fastify.log.info("CORS configured with explicit headers");
 }

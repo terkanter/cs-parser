@@ -27,12 +27,6 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
       schema: {
         description: "Get current user profile",
         tags: ["users"],
-        response: {
-          401: z.object({
-            error: z.string(),
-            code: z.string(),
-          }),
-        },
       },
     },
     async (request, reply) => {
@@ -47,17 +41,20 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
 
         const { user } = request.ctx.requireAuth();
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          telegramId: (user as any).telegramId || null,
-          liskinsApiKey: (user as any).liskinsApiKey || null,
-          emailVerified: user.emailVerified,
-          createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString(),
-        };
+        const userData = await request.ctx.prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            telegramId: true,
+            liskinsApiKey: true,
+            emailVerified: true,
+          },
+        });
+
+        reply.status(200).send(userData);
       } catch (error) {
         request.log.error("Error getting user profile:", error);
         return reply.status(500).send({
@@ -76,17 +73,6 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
         description: "Update current user profile",
         tags: ["users"],
         operationId: "updateUserProfile",
-        body: updateUserBodySchema,
-        response: {
-          401: z.object({
-            error: z.string(),
-            code: z.string(),
-          }),
-          400: z.object({
-            error: z.string(),
-            code: z.string(),
-          }),
-        },
       },
     },
     async (request, reply) => {
@@ -131,19 +117,18 @@ export async function registerUserMeRoute(fastify: FastifyInstance) {
             ...(telegramId !== undefined && { telegramId }),
             ...(liskinsApiKey !== undefined && { liskinsApiKey }),
           },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            telegramId: true,
+            liskinsApiKey: true,
+            emailVerified: true,
+          },
         });
 
-        return {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          name: updatedUser.name,
-          image: updatedUser.image,
-          telegramId: updatedUser.telegramId,
-          liskinsApiKey: updatedUser.liskinsApiKey,
-          emailVerified: updatedUser.emailVerified,
-          createdAt: updatedUser.createdAt.toISOString(),
-          updatedAt: updatedUser.updatedAt.toISOString(),
-        };
+        reply.status(200).send(updatedUser);
       } catch (error) {
         request.log.error("Error updating user profile:", error);
         return reply.status(500).send({
