@@ -15,7 +15,7 @@ export const SimpleForm = ({
   className?: string;
   toolbar?: ReactNode;
 } & FormProps) => (
-  <Form className={cn("flex flex-col gap-4 w-full max-w-lg", className)} {...rest}>
+  <Form className={cn("flex flex-col gap-6 w-full max-w-lg", className)} {...rest}>
     {children}
     {toolbar}
   </Form>

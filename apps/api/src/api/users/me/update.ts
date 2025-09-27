@@ -1,21 +1,29 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
-export async function registerUserGetMeRoute(fastify: FastifyInstance) {
-  fastify.withTypeProvider<ZodTypeProvider>().get(
+export async function registerUserUpdateMeRoute(fastify: FastifyInstance) {
+  fastify.withTypeProvider<ZodTypeProvider>().put(
     "/",
     {
       schema: {
-        description: "Get current user profile",
+        description: "Update current user profile",
         tags: ["users"],
+        operationId: "updateUserProfile",
       },
     },
     async (request, reply) => {
       try {
         const { user } = request.ctx.requireAuth();
 
-        const userData = await request.ctx.prisma.user.findUnique({
-          where: { id: user.id },
+        const { telegramId } = request.body as {
+          telegramId: string | null;
+        };
+
+        const updatedUser = await request.ctx.prisma.user.update({
+          where: { id: user!.id },
+          data: {
+            ...(telegramId !== undefined && { telegramId }),
+          },
           select: {
             id: true,
             email: true,
@@ -28,20 +36,9 @@ export async function registerUserGetMeRoute(fastify: FastifyInstance) {
           },
         });
 
-        if (!userData) {
-          return reply.status(404).send({
-            error: "User not found",
-            code: "USER_NOT_FOUND",
-          });
-        }
-
-        return reply.status(200).send({
-          ...userData,
-          createdAt: userData.createdAt.toISOString(),
-          updatedAt: userData.updatedAt.toISOString(),
-        });
+        return reply.status(200).send(updatedUser);
       } catch (error) {
-        request.log.error("Error getting user profile:", error);
+        request.log.error("Error updating user profile:", error);
         return reply.status(500).send({
           error: "Internal server error",
           code: "INTERNAL_ERROR",

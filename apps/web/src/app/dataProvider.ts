@@ -31,6 +31,20 @@ export const dataProvider = {
       }
     });
 
+    // Handle special case for platform-accounts
+    if (resource === "platform-accounts") {
+      const url = `${apiUrl}/users/me/platform-accounts`;
+      const { json } = await httpClient(url, {
+        signal: params.signal,
+        credentials: "include",
+      });
+
+      return {
+        data: json.data || [],
+        total: json.data?.length || 0,
+      };
+    }
+
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
     const { json } = await httpClient(url, { signal: params.signal });
 
@@ -105,6 +119,17 @@ export const dataProvider = {
     // Handle special case for users/me
     if (resource === "users" && params.id === "me") {
       const url = `${apiUrl}/users/me`;
+      const { json } = await httpClient(url, {
+        method: "PUT",
+        body: JSON.stringify(params.data),
+        credentials: "include",
+      });
+      return { data: json };
+    }
+
+    // Handle special case for platform-accounts (upsert by platform)
+    if (resource === "platform-accounts") {
+      const url = `${apiUrl}/users/me/platform-accounts/${params.id}`;
       const { json } = await httpClient(url, {
         method: "PUT",
         body: JSON.stringify(params.data),

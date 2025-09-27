@@ -2,7 +2,7 @@ import { BuyRequestCreate, BuyRequestEdit, BuyRequestList, BuyRequestShow } from
 import { Admin } from "@/shared/components/admin";
 import { CustomRoutes, Resource } from "ra-core";
 import { Route } from "react-router";
-import { UserSettings } from "../resources/UserSettings";
+import { UserSettings } from "../resources/user-settings";
 import { authProvider } from "./authProvider";
 import { dataProvider } from "./dataProvider";
 

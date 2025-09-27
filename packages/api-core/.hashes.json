@@ -1,9 +1,10 @@
 {
-  "tsup.config.json": "96ad00f1548aafa69dfc8cf16e2b3f0abdd7063a48778f1024d0c030324d4edf",
-  "package.json": "18053cd3bf3bd08ba5e2711084a58d41d21ac6fc5e32826cda490fa7856788cc",
-  "tsconfig.json": "e3d84b9e454348c62a1b95a9a523d5592d9470626e9c160e214ec5f1f0a5e110",
-  "src\\queues.ts": "2139cbeab5e11d64c90aaecdbff5f59772f0280f9ceb9046809bce0bdc36f918",
-  "src\\types.ts": "50711af81f2d0887d118d08ab62d41b4f01fdedd91bcad0f1298c597713072d8",
-  "src\\index.ts": "add63c7703bdcc3b084087a343d8e2a3484a550fed61511b0ac3a4e14c4be9b3",
-  "src\\logger.ts": "20abd084e0b75c9754a09f47cce1f08f1e22a944dcf6b1c077d803dc9b2a8d4a"
+  "package.json": "be2400c19b510304a7fc28a0ad5b73ac730c721356b24fa3646277bfb7c121bc",
+  "src/types.ts": "50711af81f2d0887d118d08ab62d41b4f01fdedd91bcad0f1298c597713072d8",
+  "src/queues.ts": "2139cbeab5e11d64c90aaecdbff5f59772f0280f9ceb9046809bce0bdc36f918",
+  "src/platforms.ts": "73650fb7c725c3ba3746ed1265da4ea8e64d9501612be0bf560b4a149ee2ea47",
+  "src/logger.ts": "611c4c9a747aab1694f82eaf73712a2db4c14e27fc356aa2157d5657918930c4",
+  "src/index.ts": "cc240d0eb0a96622a4362c909e2ae0e1e897f0a77f0ebed90f4e361fe57c3b86",
+  "tsconfig.json": "b603172e0956945eb7914cd2d1e4c62c725f0e3d661755261e95f1071471bec7",
+  "tsup.config.json": "e79910d8870e222a337e57c94c83680e404556f2929febfc949ae9907a8e1150"
 }

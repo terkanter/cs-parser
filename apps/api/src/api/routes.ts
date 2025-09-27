@@ -1,3 +1,4 @@
+import { authGuard } from "@/middleware/auth";
 import type { FastifyInstance } from "fastify";
 import { registerAuthRoutes } from "./auth/index";
 import { registerBuyRequestRoutes } from "./buy-requests/index";
@@ -8,20 +9,11 @@ export async function registerResourceRoutes(fastify: FastifyInstance, _opts) {
 }
 
 async function routes(fastify: FastifyInstance) {
-  // Register authentication routes
   await registerAuthRoutes(fastify);
 
-  // Register user routes
-  fastify.register(
-    registerUserRoutes,
-    { prefix: "/users" },
-  );
-
-  // Register buy request routes
-  fastify.register(
-    registerBuyRequestRoutes,
-    { prefix: "/buy-requests" },
-  );
-
-  // Register your other API routes here
+  fastify.register(async function protectedRoutes(fastify) {
+    fastify.register(authGuard);
+    fastify.register(registerUserRoutes, { prefix: "/users" });
+    fastify.register(registerBuyRequestRoutes, { prefix: "/buy-requests" });
+  });
 }

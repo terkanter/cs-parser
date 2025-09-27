@@ -7,14 +7,7 @@ export const authClient = createAuthClient({
   plugins: [
     usernameClient(),
     inferAdditionalFields({
-      user: {
-        role: {
-          type: "string",
-        },
-      },
+      user: {},
     }),
-    // inferAdditionalFields<typeof auth>()],
-
-    // Add other client plugins here as needed
   ],
 });

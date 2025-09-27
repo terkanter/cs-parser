@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect } from "react";
 import { useStore } from "ra-core";
+import { createContext, useContext, useEffect } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -23,7 +23,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "theme",
   ...props
 }: ThemeProviderProps) {

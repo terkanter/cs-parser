@@ -31,9 +31,9 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  telegramId    String?
+  telegramId String?
 
-  buyRequests BuyRequest[]
+  buyRequests      BuyRequest[]
   platformAccounts PlatformAccount[]
 
   @@unique([email])
@@ -41,7 +41,7 @@ model User {
 }
 
 model Session {
-  id            String    @id @default(uuid())
+  id        String   @id @default(uuid())
   expiresAt DateTime
   token     String
   createdAt DateTime
@@ -56,7 +56,7 @@ model Session {
 }
 
 model Account {
-  id            String    @id @default(uuid())
+  id                    String    @id @default(uuid())
   accountId             String
   providerId            String
   userId                String
@@ -75,7 +75,7 @@ model Account {
 }
 
 model Verification {
-  id            String    @id @default(uuid())
+  id         String    @id @default(uuid())
   identifier String
   value      String
   expiresAt  DateTime
@@ -88,7 +88,7 @@ model Verification {
 // Business models
 
 model BuyRequest {
-  id            String    @id @default(uuid())
+  id        String   @id @default(uuid())
   platform  Platform
   query     Json
   isActive  Boolean  @default(true)
@@ -102,12 +102,13 @@ model BuyRequest {
 }
 
 model PlatformAccount {
-  id            String    @id @default(uuid())
-  platform  Platform
+  id          String   @id @default(uuid())
+  platform    Platform
   credentials Json
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([platform, userId])
   @@map("platform_account")
 }

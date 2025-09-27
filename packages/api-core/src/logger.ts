@@ -59,7 +59,11 @@ export function createLogger(config: LoggerConfig = {}) {
     plugins: [
       {
         shouldSendToLogger(params: PluginShouldSendToLoggerParams): boolean {
-          if (params.messages?.[1] && ignoreLogs.some((log) => params.messages[1].includes(log))) {
+          if (
+            params.messages?.[1] &&
+            typeof params.messages[1] === "string" &&
+            ignoreLogs.some((log) => params.messages[1].includes(log))
+          ) {
             return false;
           }
           return true;
