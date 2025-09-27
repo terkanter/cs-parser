@@ -1,4 +1,4 @@
-import { BooleanInput, DataTable, DateField, List, TextField } from "@/shared/components/admin";
+import { BooleanInput, DataTable, List } from "@/shared/components/admin";
 import { Badge } from "@/shared/components/ui/badge";
 
 const BuyRequestFilter = [
@@ -22,39 +22,11 @@ const PlatformColumn = ({ record }: { record?: any }) => {
     CS_MONEY: "CS Money",
   };
 
-  return (
-    <Badge variant={record.platform === "LIS_SKINS" ? "default" : "secondary"}>
-      {platformLabels[record.platform] || record.platform}
-    </Badge>
-  );
+  return <div className="font-bold">{platformLabels[record.platform] || record.platform}</div>;
 };
 
-const QueryColumn = ({ record }: { record?: any }) => {
+const FloatsColumn = ({ record }: { record?: any }) => {
   if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
-
-  const queryParts = [];
-
-  if (record.query.item?.length) {
-    queryParts.push(`Items: ${record.query.item.join(", ")}`);
-  }
-
-  if (record.query.quality?.length) {
-    queryParts.push(`Quality: ${record.query.quality.join(", ")}`);
-  }
-
-  if (record.query.price?.length) {
-    const priceRanges = record.query.price
-      .map((p: any) => {
-        if (p.gte && p.lte) return `$${p.gte}-$${p.lte}`;
-        if (p.gte) return `≥$${p.gte}`;
-        if (p.lte) return `≤$${p.lte}`;
-        return "";
-      })
-      .filter(Boolean);
-    if (priceRanges.length) {
-      queryParts.push(`Price: ${priceRanges.join(", ")}`);
-    }
-  }
 
   if (record.query.float?.length) {
     const floatRanges = record.query.float
@@ -66,55 +38,91 @@ const QueryColumn = ({ record }: { record?: any }) => {
       })
       .filter(Boolean);
     if (floatRanges.length) {
-      queryParts.push(`Float: ${floatRanges.join(", ")}`);
+      return floatRanges.map((float: string) => (
+        <Badge key={float} variant="outline">
+          {float}
+        </Badge>
+      ));
     }
   }
 
-  return queryParts.length > 0 ? (
-    <div className="text-sm space-y-1">
-      {queryParts.map((part) => (
-        <div key={part} className="text-muted-foreground">
-          {part}
-        </div>
-      ))}
-    </div>
-  ) : (
-    <span className="text-muted-foreground">No filters</span>
-  );
+  return <span className="text-muted-foreground">No filters</span>;
 };
 
-const BooleanColumn = ({ record }: { record?: any }) => {
+const PricesColumn = ({ record }: { record?: any }) => {
+  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
+
+  if (record.query.price?.length) {
+    const priceRanges = record.query.price
+      .map((p: any) => {
+        if (p.gte && p.lte) return `$${p.gte}-$${p.lte}`;
+        if (p.gte) return `≥$${p.gte}`;
+        if (p.lte) return `≤$${p.lte}`;
+        return "";
+      })
+      .filter(Boolean);
+
+    if (priceRanges.length) {
+      return priceRanges.map((price: string) => (
+        <Badge key={price} variant="outline">
+          {price}
+        </Badge>
+      ));
+    }
+  }
+
+  return <span className="text-muted-foreground">No filters</span>;
+};
+
+const QualityColumn = ({ record }: { record?: any }) => {
+  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
+
+  if (record.query.quality?.length) {
+    return record.query.quality.map((quality: string) => (
+      <Badge key={quality} variant="outline">
+        {quality}
+      </Badge>
+    ));
+  }
+
+  return <span className="text-muted-foreground">No filters</span>;
+};
+
+const ItemsColumn = ({ record }: { record?: any }) => {
+  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
+
+  const queryParts = [];
+
+  if (record.query.item?.length) {
+    queryParts.push(`${record.query.item.join(", ")}`);
+  }
+
+  if (record.query.quality?.length) {
+    return record.query.item.map((item: string) => (
+      <Badge key={item} variant="outline">
+        {item}
+      </Badge>
+    ));
+  }
+
+  return <span className="text-muted-foreground">No filters</span>;
+};
+
+const BooleanColumn = ({ record, ...rest }: { record?: any }) => {
   if (!record || record.isActive === undefined) return null;
 
-  return <Badge variant={record.isActive ? "default" : "secondary"}>{record.isActive ? "Active" : "Inactive"}</Badge>;
+  return <Badge variant={record.isActive ? "secondary" : "destructive"}>{record.isActive ? "Yes" : "No"}</Badge>;
 };
 
 export const BuyRequestList = () => (
-  <List filters={BuyRequestFilter} perPage={25} sort={{ field: "createdAt", order: "DESC" }}>
-    <DataTable>
-      <DataTable.Col source="id">
-        <TextField source="id" />
-      </DataTable.Col>
-
-      <DataTable.Col source="platform" label="Platform">
-        <PlatformColumn />
-      </DataTable.Col>
-
-      <DataTable.Col source="query" label="Query">
-        <QueryColumn />
-      </DataTable.Col>
-
-      <DataTable.Col source="isActive" label="Active">
-        <BooleanColumn />
-      </DataTable.Col>
-
-      <DataTable.Col source="createdAt" label="Created">
-        <DateField source="createdAt" />
-      </DataTable.Col>
-
-      <DataTable.Col source="updatedAt" label="Updated">
-        <DateField source="updatedAt" />
-      </DataTable.Col>
+  <List filters={BuyRequestFilter} perPage={25}>
+    <DataTable hasBulkActions={false} sort={{ field: "createdAt", order: "DESC" }}>
+      <DataTable.Col source="query" label="Items" render={(record) => <ItemsColumn record={record} />} />
+      <DataTable.Col source="query" label="Prices" render={(record) => <PricesColumn record={record} />} />
+      <DataTable.Col source="query" label="Floats" render={(record) => <FloatsColumn record={record} />} />
+      <DataTable.Col source="query" label="Quality" render={(record) => <QualityColumn record={record} />} />
+      <DataTable.Col source="platform" label="Platform" render={(record) => <PlatformColumn record={record} />} />
+      <DataTable.Col source="isActive" label="Active" render={(record) => <BooleanColumn record={record} />} />
     </DataTable>
   </List>
 );

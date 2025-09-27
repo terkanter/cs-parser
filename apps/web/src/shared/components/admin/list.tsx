@@ -1,6 +1,5 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbPage } from "@/shared/components/admin/breadcrumb";
 import { CreateButton } from "@/shared/components/admin/create-button";
-import { ExportButton } from "@/shared/components/admin/export-button";
 import { FilterForm } from "@/shared/components/admin/filter-form";
 import { ListPagination } from "@/shared/components/admin/list-pagination";
 import { FilterContext, type FilterElementProps } from "@/shared/hooks/filter-context";
@@ -95,12 +94,7 @@ export const ListView = <RecordType extends RaRecord = RaRecord>(props: ListView
       <FilterContext.Provider value={filters}>
         <div className="flex justify-between items-start flex-wrap gap-2 mb-2">
           <h2 className="text-2xl font-bold tracking-tight mb-2">{finalTitle}</h2>
-          {actions ?? (
-            <div className="flex items-center gap-2">
-              {hasCreate ? <CreateButton /> : null}
-              {<ExportButton />}
-            </div>
-          )}
+          {actions ?? <div className="flex items-center gap-2">{hasCreate ? <CreateButton /> : null}</div>}
         </div>
         <FilterForm />
 

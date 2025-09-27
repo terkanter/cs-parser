@@ -31,7 +31,7 @@ export const FormToolbar = ({ children, className, ...rest }: FormToolbarProps) 
     role="toolbar"
   >
     {Children.count(children) === 0 ? (
-      <div className="flex flex-row gap-2 justify-end">
+      <div className="flex flex-row gap-2 justify-start">
         <CancelButton />
         <SaveButton />
       </div>

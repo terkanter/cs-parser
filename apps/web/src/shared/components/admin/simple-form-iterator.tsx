@@ -300,7 +300,7 @@ export const SimpleFormIteratorItem = React.forwardRef(
         <li
           ref={ref}
           className={cn(
-            "flex flex-row items-start justify-between gap-2 pb-2 border-b border-border last:border-b-0",
+            "flex flex-row items-start justify-between gap-2 pb-2 ",
             // Align the buttons with the input
             "[&:has(label)>.simple-form-iterator-item-actions]:pt-10",
           )}
@@ -354,7 +354,7 @@ export const AddItemButton = (props: React.ComponentProps<"button">) => {
         <TooltipTrigger asChild>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => add()}
             className={cn("button-add", `button-add-${source}`, className)}
@@ -395,7 +395,7 @@ export const ClearArrayButton = (props: React.ComponentProps<"button">) => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button type="button" variant="ghost" size="icon" {...props}>
+          <Button type="button" variant="outline" size="icon" {...props}>
             <Trash className="h-5 w-5 text-red-500" />
           </Button>
         </TooltipTrigger>

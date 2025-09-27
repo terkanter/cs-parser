@@ -7,7 +7,6 @@ import {
   SimpleFormIterator,
   TextInput,
 } from "@/shared/components/admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { maxValue, minValue, required } from "ra-core";
 
 const platformChoices = [
@@ -46,75 +45,60 @@ const PaintSeedRangeInput = () => (
 
 export const BuyRequestForm = () => (
   <SimpleForm>
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4 pr-6">
       {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Query Configuration */}
+      <div className="-mx-6 flex-1 border-r">
+        <div className="border-t py-6 px-6 space-y-6">
           <SelectInput source="platform" choices={platformChoices} validate={[required()]} label="Platform" />
           <BooleanInput source="isActive" label="Active" defaultValue={true} />
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Query Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Query</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Items */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">Items</h4>
-            <ArrayInput source="query.item" label="">
-              <SimpleFormIterator>
-                <TextInput source="" label="Item name" helperText="e.g., AK-47, AWP, etc." />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </div>
-
-          {/* Quality */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">Quality</h4>
-            <ArrayInput source="query.quality" label="">
-              <SimpleFormIterator>
-                <SelectInput source="" choices={qualityChoices} label="Quality" />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </div>
-
-          {/* Price Ranges */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">Price Ranges</h4>
-            <ArrayInput source="query.price" label="">
-              <SimpleFormIterator>
-                <PriceRangeInput />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </div>
-
-          {/* Float Ranges */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">Float Ranges</h4>
-            <ArrayInput source="query.float" label="">
-              <SimpleFormIterator>
-                <FloatRangeInput />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </div>
-
-          {/* Paint Seed Ranges */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">Paint Seed Ranges</h4>
-            <ArrayInput source="query.paint_seed" label="">
-              <SimpleFormIterator>
-                <PaintSeedRangeInput />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="border-t py-3 px-6">
+          <h4 className="text-sm font-medium">Items</h4>
+          <ArrayInput source="query.item" label="">
+            <SimpleFormIterator>
+              <TextInput source="" label={false} helperText="e.g., AK-47, AWP, etc." />
+            </SimpleFormIterator>
+          </ArrayInput>
+        </div>
+        {/* Quality */}
+        <div className="border-t py-3 px-6">
+          <h4 className="text-sm font-medium">Quality</h4>
+          <ArrayInput source="query.quality" label={false}>
+            <SimpleFormIterator>
+              <SelectInput source="" choices={qualityChoices} label="" />
+            </SimpleFormIterator>
+          </ArrayInput>
+        </div>
+        {/* Price Ranges */}
+        <div className="border-t py-3 px-6">
+          <h4 className="text-sm font-medium">Price Ranges</h4>
+          <ArrayInput source="query.price" label={false}>
+            <SimpleFormIterator>
+              <PriceRangeInput />
+            </SimpleFormIterator>
+          </ArrayInput>
+        </div>
+        {/* Float Ranges */}
+        <div className="border-t py-3 px-6">
+          <h4 className="text-sm font-medium">Float Ranges</h4>
+          <ArrayInput source="query.float" label={false}>
+            <SimpleFormIterator>
+              <FloatRangeInput />
+            </SimpleFormIterator>
+          </ArrayInput>
+        </div>
+        {/* Paint Seed Ranges */}
+        <div className="border-t py-3 px-6 border-b">
+          <h4 className="text-sm font-medium">Paint Seed Ranges</h4>
+          <ArrayInput source="query.paint_seed" label={false}>
+            <SimpleFormIterator>
+              <PaintSeedRangeInput />
+            </SimpleFormIterator>
+          </ArrayInput>
+        </div>
+      </div>
     </div>
   </SimpleForm>
 );
