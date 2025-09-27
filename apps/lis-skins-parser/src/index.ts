@@ -1,5 +1,5 @@
 import { connectDatabase, disconnectDatabase } from "./services/database";
-import { parserScheduler } from "./services/parser-scheduler";
+import { lisSkinsService } from "./services/lis-skins.service";
 import { rabbitmqService } from "./services/rabbitmq";
 import { logger } from "./utils/logger";
 
@@ -11,8 +11,8 @@ async function main() {
     await connectDatabase();
     await rabbitmqService.connect();
 
-    // Start parser scheduler
-    await parserScheduler.start();
+    // Start LIS-Skins service
+    await lisSkinsService.start();
 
     logger.info("LIS Skins Parser started successfully");
 
@@ -29,7 +29,7 @@ async function shutdown() {
   logger.info("Shutting down LIS Skins Parser...");
 
   try {
-    await parserScheduler.stop();
+    await lisSkinsService.stop();
     await rabbitmqService.close();
     await disconnectDatabase();
 
