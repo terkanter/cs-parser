@@ -54,13 +54,16 @@ export async function registerPlatformAccountUpsertRoute(fastify: FastifyInstanc
               credentials: validatedCredentials,
               userId: user.id,
             },
+            select: {
+              platform: true,
+              credentials: true,
+              userId: true,
+            },
           });
 
           return reply.status(200).send({
-            id: platformAccount.id,
-            platform: platformAccount.platform,
-            credentials: platformAccount.credentials,
-            userId: platformAccount.userId,
+            ...platformAccount,
+            id: platform,
           });
         } catch (error) {
           request.log.error("Error upserting platform account:", error);

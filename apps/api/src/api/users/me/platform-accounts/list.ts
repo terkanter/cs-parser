@@ -1,3 +1,4 @@
+import { getPaginationMeta } from "@/utils/pagination";
 import { getAllPlatforms, getDefaultCredentials } from "@repo/api-core";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -18,6 +19,11 @@ export async function registerPlatformAccountListRoute(fastify: FastifyInstance)
         // Get existing platform accounts
         const existingAccounts = await request.ctx.prisma.platformAccount.findMany({
           where: { userId: user.id },
+          select: {
+            platform: true,
+            credentials: true,
+            userId: true,
+          },
         });
 
         // Create map of existing platforms
@@ -30,7 +36,7 @@ export async function registerPlatformAccountListRoute(fastify: FastifyInstance)
 
           if (existing) {
             return {
-              id: existing.id,
+              id: existing.platform,
               platform: existing.platform,
               credentials: existing.credentials,
               userId: existing.userId,
@@ -39,7 +45,7 @@ export async function registerPlatformAccountListRoute(fastify: FastifyInstance)
 
           // Return default/empty configuration for missing platforms
           return {
-            id: null, // Indicates this platform is not configured
+            id: platform, // Indicates this platform is not configured
             platform,
             credentials: getDefaultCredentials(platform),
             userId: user.id,
@@ -48,6 +54,7 @@ export async function registerPlatformAccountListRoute(fastify: FastifyInstance)
 
         return reply.status(200).send({
           data: result,
+          pagination: getPaginationMeta({ page: 1, perPage: result.length }, result.length),
         });
       } catch (error) {
         request.log.error("Error getting platform accounts:", error);

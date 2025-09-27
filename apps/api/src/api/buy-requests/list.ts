@@ -7,7 +7,10 @@ const querySchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   perPage: z.coerce.number().min(1).max(100).optional().default(10),
   platform: z.enum(["LIS_SKINS", "CS_MONEY"]).optional(),
-  isActive: z.string().transform(val => val === "true").optional(),
+  isActive: z
+    .string()
+    .transform((val) => val === "true")
+    .optional(),
   sort: z.string().optional(),
   order: z.enum(["ASC", "DESC"]).optional(),
 });

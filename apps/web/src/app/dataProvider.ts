@@ -1,11 +1,27 @@
 import { env } from "@/shared/env";
+import { httpClient } from "@/shared/lib/http-client";
 import s from "query-string";
-import { fetchUtils } from "ra-core";
 
 const stringify = s.stringify;
 
 const apiUrl = `${env.VITE_API_URL}/api`;
-const httpClient = fetchUtils.fetchJson;
+
+const customResources = {
+  "platform-accounts": {
+    url: "users/me/platform-accounts",
+  },
+};
+
+function getResourceUrl(resource: string) {
+  let url: string;
+  if (customResources[resource as keyof typeof customResources]) {
+    url = customResources[resource as keyof typeof customResources].url;
+  } else {
+    url = resource;
+  }
+
+  return `${apiUrl}/${url}`;
+}
 
 export const dataProvider = {
   getList: async (resource: string, params: any) => {
@@ -25,28 +41,16 @@ export const dataProvider = {
     }
 
     // Add filters
-    Object.keys(params.filter || {}).forEach((key) => {
+    for (const key of Object.keys(params.filter || {})) {
       if (params.filter[key] !== undefined) {
         query[key] = params.filter[key];
       }
-    });
-
-    // Handle special case for platform-accounts
-    if (resource === "platform-accounts") {
-      const url = `${apiUrl}/users/me/platform-accounts`;
-      const { json } = await httpClient(url, {
-        signal: params.signal,
-        credentials: "include",
-      });
-
-      return {
-        data: json.data || [],
-        total: json.data?.length || 0,
-      };
     }
 
-    const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const { json } = await httpClient(url, { signal: params.signal });
+    const url = `${getResourceUrl(resource)}?${stringify(query)}`;
+    const { json } = await httpClient(url, {
+      signal: params.signal,
+    });
 
     // Handle our API response format: {data: [...], pagination: {...}}
     if (json.data && json.pagination) {
@@ -64,17 +68,7 @@ export const dataProvider = {
   },
 
   getOne: async (resource: string, params: any) => {
-    // Handle special case for users/me
-    if (resource === "users" && params.id === "me") {
-      const url = `${apiUrl}/users/me`;
-      const { json } = await httpClient(url, {
-        signal: params.signal,
-        credentials: "include",
-      });
-      return { data: json };
-    }
-
-    const url = `${apiUrl}/${resource}/${params.id}`;
+    const url = `${getResourceUrl(resource)}/${encodeURIComponent(params.id)}`;
     const { json } = await httpClient(url, { signal: params.signal });
     return { data: json };
   },
@@ -83,8 +77,8 @@ export const dataProvider = {
     const query = {
       filter: JSON.stringify({ ids: params.ids }),
     };
-    const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const { json } = await httpClient(url, { signal: params.signal, credentials: "include", });
+    const url = `${getResourceUrl(resource)}?${stringify(query)}`;
+    const { json } = await httpClient(url, { signal: params.signal });
     return { data: json };
   },
 
@@ -99,8 +93,8 @@ export const dataProvider = {
         [params.target]: params.id,
       }),
     };
-    const url = `${apiUrl}/${resource}?${stringify(query)}`;
-    const { json, headers } = await httpClient(url, { signal: params.signal, credentials: "include", });
+    const url = `${getResourceUrl(resource)}?${stringify(query)}`;
+    const { json, headers } = await httpClient(url, { signal: params.signal });
     return {
       data: json,
       total: Number.parseInt(headers.get("content-range")?.split("/").pop() || "0", 10),
@@ -108,10 +102,9 @@ export const dataProvider = {
   },
 
   create: async (resource: string, params: any) => {
-    const { json } = await httpClient(`${apiUrl}/${resource}`, {
+    const { json } = await httpClient(`${getResourceUrl(resource)}`, {
       method: "POST",
       body: JSON.stringify(params.data),
-      credentials: "include",
     });
     return { data: json };
   },
@@ -119,27 +112,15 @@ export const dataProvider = {
   update: async (resource: string, params: any) => {
     // Handle special case for users/me
     if (resource === "users" && params.id === "me") {
-      const url = `${apiUrl}/users/me`;
+      const url = getResourceUrl(resource);
       const { json } = await httpClient(url, {
         method: "PUT",
         body: JSON.stringify(params.data),
-        credentials: "include",
       });
       return { data: json };
     }
 
-    // Handle special case for platform-accounts (upsert by platform)
-    if (resource === "platform-accounts") {
-      const url = `${apiUrl}/users/me/platform-accounts/${params.id}`;
-      const { json } = await httpClient(url, {
-        method: "PUT",
-        body: JSON.stringify(params.data),
-        credentials: "include",
-      });
-      return { data: json };
-    }
-
-    const url = `${apiUrl}/${resource}/${params.id}`;
+    const url = `${getResourceUrl(resource)}/${encodeURIComponent(params.id)}`;
     const { json } = await httpClient(url, {
       method: "PUT",
       body: JSON.stringify(params.data),
@@ -151,20 +132,18 @@ export const dataProvider = {
     const query = {
       filter: JSON.stringify({ id: params.ids }),
     };
-    const url = `${apiUrl}/${resource}?${stringify(query)}`;
+    const url = `${getResourceUrl(resource)}?${stringify(query)}`;
     const { json } = await httpClient(url, {
       method: "PUT",
       body: JSON.stringify(params.data),
-      credentials: "include",
     });
     return { data: json };
   },
 
   delete: async (resource: string, params: any) => {
-    const url = `${apiUrl}/${resource}/${params.id}`;
+    const url = `${getResourceUrl(resource)}/${encodeURIComponent(params.id)}`;
     const { json } = await httpClient(url, {
       method: "DELETE",
-      credentials: "include",
     });
     return { data: json };
   },
@@ -173,10 +152,9 @@ export const dataProvider = {
     const query = {
       filter: JSON.stringify({ id: params.ids }),
     };
-    const url = `${apiUrl}/${resource}?${stringify(query)}`;
+    const url = `${getResourceUrl(resource)}?${stringify(query)}`;
     const { json } = await httpClient(url, {
       method: "DELETE",
-      credentials: "include",
       body: JSON.stringify(params.data),
     });
     return { data: json };
