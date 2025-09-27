@@ -4,12 +4,12 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
 const querySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(10),
+  page: z.coerce.number().min(1).optional().default(1),
+  perPage: z.coerce.number().min(1).max(100).optional().default(10),
   platform: z.enum(["LIS_SKINS", "CS_MONEY"]).optional(),
-  isActive: z.coerce.boolean().optional(),
+  isActive: z.string().transform(val => val === "true").optional(),
   sort: z.string().optional(),
-  order: z.enum(["asc", "desc"]).optional(),
+  order: z.enum(["ASC", "DESC"]).optional(),
 });
 
 export async function registerBuyRequestListRoute(fastify: FastifyInstance) {

@@ -17,10 +17,10 @@ export async function startServer({ port }: { port: number }) {
     loggerInstance: logger,
     disableRequestLogging: true,
     genReqId: () => nanoid(12),
-  })
-    .withTypeProvider<ZodTypeProvider>()
-    .setValidatorCompiler(validatorCompiler)
-    .setSerializerCompiler(serializerCompiler);
+  }).withTypeProvider<ZodTypeProvider>()
+
+  fastify.setValidatorCompiler(validatorCompiler)
+  fastify.setSerializerCompiler(serializerCompiler);
 
   // Register CORS directly as THE FIRST PLUGIN
   await fastify.register(fastifyCors, {
