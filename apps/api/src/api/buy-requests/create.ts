@@ -1,7 +1,7 @@
+import { createBuyRequestSchema } from "@/schemas/buy-request";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import { createBuyRequestSchema } from "@/schemas/buy-request";
-import { z } from "zod";
+import type { z } from "zod";
 
 export async function registerBuyRequestCreateRoute(fastify: FastifyInstance) {
   // POST /buy-requests - Create buy request
@@ -17,7 +17,7 @@ export async function registerBuyRequestCreateRoute(fastify: FastifyInstance) {
     async (request, reply) => {
       const data = request.body;
 
-      const auth = request.ctx.requireAuth()
+      const auth = request.ctx.requireAuth();
 
       try {
         const buyRequest = await request.ctx.prisma.buyRequest.create({
@@ -27,11 +27,7 @@ export async function registerBuyRequestCreateRoute(fastify: FastifyInstance) {
           },
         });
 
-        return reply.status(201).send({
-          ...buyRequest,
-          createdAt: buyRequest.createdAt.toISOString(),
-          updatedAt: buyRequest.updatedAt.toISOString(),
-        });
+        return reply.status(201).send(buyRequest);
       } catch (error) {
         request.log.error("Error creating buy request:", error);
         return reply.status(400).send({

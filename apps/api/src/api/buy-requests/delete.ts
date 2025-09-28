@@ -25,18 +25,18 @@ export async function registerBuyRequestDeleteRoute(fastify: FastifyInstance) {
           where: { id },
         });
 
-        return reply.status(204).send();
+        reply.status(204).send();
       } catch (error: any) {
         request.log.error("Error deleting buy request:", error);
 
         if (error.code === "P2025") {
-          return reply.status(404).send({
+          reply.status(404).send({
             error: "Buy request not found",
             code: "NOT_FOUND",
           });
         }
 
-        return reply.status(500).send({
+        reply.status(500).send({
           error: "Failed to delete buy request",
           code: "DELETE_FAILED",
         });

@@ -31,11 +31,7 @@ export async function registerBuyRequestGetByIdRoute(fastify: FastifyInstance) {
         });
       }
 
-      return {
-        ...buyRequest,
-        createdAt: buyRequest.createdAt.toISOString(),
-        updatedAt: buyRequest.updatedAt.toISOString(),
-      };
+      return reply.status(200).send(buyRequest);
     },
   );
 }

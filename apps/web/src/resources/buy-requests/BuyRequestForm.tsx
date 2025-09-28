@@ -2,17 +2,11 @@ import {
   ArrayInput,
   BooleanInput,
   NumberInput,
-  SelectInput,
   SimpleForm,
   SimpleFormIterator,
   TextInput,
 } from "@/shared/components/admin";
-import { maxValue, minValue, required } from "ra-core";
-
-const platformChoices = [
-  { id: "LIS_SKINS", name: "Lis Skins" },
-  { id: "CS_MONEY", name: "CS Money" },
-];
+import { maxValue, minValue } from "ra-core";
 
 const qualityChoices = [
   { id: "FN", name: "Factory New" },
@@ -50,7 +44,6 @@ export const BuyRequestForm = () => (
       {/* Query Configuration */}
       <div className="-mx-6 flex-1 border-r">
         <div className="border-t py-6 px-6 space-y-6">
-          <SelectInput source="platform" choices={platformChoices} validate={[required()]} label="Platform" />
           <BooleanInput source="isActive" label="Active" defaultValue={true} />
         </div>
 
@@ -59,15 +52,6 @@ export const BuyRequestForm = () => (
           <ArrayInput source="query.item" label="">
             <SimpleFormIterator>
               <TextInput source="" label={false} helperText="e.g., AK-47, AWP, etc." />
-            </SimpleFormIterator>
-          </ArrayInput>
-        </div>
-        {/* Quality */}
-        <div className="border-t py-3 px-6">
-          <h4 className="text-sm font-medium">Quality</h4>
-          <ArrayInput source="query.quality" label={false}>
-            <SimpleFormIterator>
-              <SelectInput source="" choices={qualityChoices} label="" />
             </SimpleFormIterator>
           </ArrayInput>
         </div>
