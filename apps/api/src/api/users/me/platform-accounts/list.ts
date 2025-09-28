@@ -1,3 +1,4 @@
+import { getPaginationMeta } from "@/utils/pagination";
 import { getAllPlatforms, getDefaultCredentials } from "@repo/api-core";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -37,9 +38,8 @@ export async function registerPlatformAccountListRoute(fastify: FastifyInstance)
             };
           }
 
-          // Return default/empty configuration for missing platforms
           return {
-            id: null, // Indicates this platform is not configured
+            id: platform,
             platform,
             credentials: getDefaultCredentials(platform),
             userId: user.id,
@@ -48,6 +48,7 @@ export async function registerPlatformAccountListRoute(fastify: FastifyInstance)
 
         return reply.status(200).send({
           data: result,
+          pagination: getPaginationMeta({ page: 1, perPage: allPlatforms.length }, allPlatforms.length),
         });
       } catch (error) {
         request.log.error("Error getting platform accounts:", error);
