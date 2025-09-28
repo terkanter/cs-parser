@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const paintSeedTierSchema = z.object({
-  value: z.number().optional(),
+  value: z.array(z.number()).optional(),
   name: z.string().optional(),
 });
 

@@ -6,6 +6,7 @@ import { z } from "zod";
 const querySchema = z.object({
   page: z.coerce.number().min(1).optional().default(1),
   perPage: z.coerce.number().min(1).max(100).optional().default(10),
+  platform: z.enum(["LIS_SKINS", "CS_MONEY"]).optional(),
   isActive: z
     .string()
     .transform((val) => val === "true")
@@ -25,12 +26,13 @@ export async function registerBuyRequestListRoute(fastify: FastifyInstance) {
         querystring: querySchema,
       },
     },
-    async (request, reply) => {
-      const { page, perPage, isActive, sort, order } = request.query;
+    async (request) => {
+      const { page, perPage, platform, isActive, sort, order } = request.query;
 
       const { take, skip } = getPaginationParams({ page, perPage });
 
       const where: any = {};
+      if (platform) where.platform = platform;
       if (isActive !== undefined) where.isActive = isActive;
 
       // Build order by clause
@@ -51,10 +53,10 @@ export async function registerBuyRequestListRoute(fastify: FastifyInstance) {
         request.ctx.prisma.buyRequest.count({ where }),
       ]);
 
-      reply.status(200).send({
+      return {
         data: data,
         pagination: getPaginationMeta({ page, perPage }, total),
-      });
+      };
     },
   );
 }

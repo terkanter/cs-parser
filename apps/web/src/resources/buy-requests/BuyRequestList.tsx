@@ -14,98 +14,31 @@ const BuyRequestFilter = [
   <BooleanInput key="isActive" source="isActive" />,
 ];
 
-const PlatformColumn = ({ record }: { record?: any }) => {
-  if (!record) return null;
+const FloatRangeColumn = ({ record }: { record?: any }) => {
+  if (!record?.query?.float) return <span className="text-muted-foreground">No filter</span>;
 
-  const platformLabels: Record<string, string> = {
-    LIS_SKINS: "Lis Skins",
-    CS_MONEY: "CS Money",
-  };
-
-  return <div className="font-bold">{platformLabels[record.platform] || record.platform}</div>;
+  const floatRange = record.query.float;
+  if (floatRange.gte && floatRange.lte) return `${floatRange.gte}-${floatRange.lte}`;
+  if (floatRange.gte) return `≥${floatRange.gte}`;
+  if (floatRange.lte) return `≤${floatRange.lte}`;
+  return "";
 };
 
-const FloatsColumn = ({ record }: { record?: any }) => {
-  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
+const PriceRangeColumn = ({ record }: { record?: any }) => {
+  if (!record?.query?.price) return <span className="text-muted-foreground">No filter</span>;
 
-  if (record.query.float?.length) {
-    const floatRanges = record.query.float
-      .map((f: any) => {
-        if (f.gte && f.lte) return `${f.gte}-${f.lte}`;
-        if (f.gte) return `≥${f.gte}`;
-        if (f.lte) return `≤${f.lte}`;
-        return "";
-      })
-      .filter(Boolean);
-    if (floatRanges.length) {
-      return floatRanges.map((float: string) => (
-        <Badge key={float} variant="outline">
-          {float}
-        </Badge>
-      ));
-    }
-  }
+  const priceRange = record.query.price;
 
-  return <span className="text-muted-foreground">No filters</span>;
+  if (priceRange.gte && priceRange.lte) return `$${priceRange.gte}-$${priceRange.lte}`;
+  if (priceRange.gte) return `≥$${priceRange.gte}`;
+  if (priceRange.lte) return `≤$${priceRange.lte}`;
+  return "";
 };
 
-const PricesColumn = ({ record }: { record?: any }) => {
-  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
+const ItemColumn = ({ record }: { record?: any }) => {
+  if (!record?.query?.item) return <span className="text-muted-foreground">No filter</span>;
 
-  if (record.query.price?.length) {
-    const priceRanges = record.query.price
-      .map((p: any) => {
-        if (p.gte && p.lte) return `$${p.gte}-$${p.lte}`;
-        if (p.gte) return `≥$${p.gte}`;
-        if (p.lte) return `≤$${p.lte}`;
-        return "";
-      })
-      .filter(Boolean);
-
-    if (priceRanges.length) {
-      return priceRanges.map((price: string) => (
-        <Badge key={price} variant="outline">
-          {price}
-        </Badge>
-      ));
-    }
-  }
-
-  return <span className="text-muted-foreground">No filters</span>;
-};
-
-const QualityColumn = ({ record }: { record?: any }) => {
-  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
-
-  if (record.query.quality?.length) {
-    return record.query.quality.map((quality: string) => (
-      <Badge key={quality} variant="outline">
-        {quality}
-      </Badge>
-    ));
-  }
-
-  return <span className="text-muted-foreground">No filters</span>;
-};
-
-const ItemsColumn = ({ record }: { record?: any }) => {
-  if (!record?.query) return <span className="text-muted-foreground">No filters</span>;
-
-  const queryParts = [];
-
-  if (record.query.item?.length) {
-    queryParts.push(`${record.query.item.join(", ")}`);
-  }
-
-  if (record.query.quality?.length) {
-    return record.query.item.map((item: string) => (
-      <Badge key={item} variant="outline">
-        {item}
-      </Badge>
-    ));
-  }
-
-  return <span className="text-muted-foreground">No filters</span>;
+  return record.query.item;
 };
 
 const BooleanColumn = ({ record, ...rest }: { record?: any }) => {
@@ -117,11 +50,9 @@ const BooleanColumn = ({ record, ...rest }: { record?: any }) => {
 export const BuyRequestList = () => (
   <List filters={BuyRequestFilter} perPage={25}>
     <DataTable hasBulkActions={false} sort={{ field: "createdAt", order: "DESC" }}>
-      <DataTable.Col source="query" label="Items" render={(record) => <ItemsColumn record={record} />} />
-      <DataTable.Col source="query" label="Prices" render={(record) => <PricesColumn record={record} />} />
-      <DataTable.Col source="query" label="Floats" render={(record) => <FloatsColumn record={record} />} />
-      <DataTable.Col source="query" label="Quality" render={(record) => <QualityColumn record={record} />} />
-      <DataTable.Col source="platform" label="Platform" render={(record) => <PlatformColumn record={record} />} />
+      <DataTable.Col source="query" label="Item" render={(record) => <ItemColumn record={record} />} />
+      <DataTable.Col source="query" label="Price" render={(record) => <PriceRangeColumn record={record} />} />
+      <DataTable.Col source="query" label="Float" render={(record) => <FloatRangeColumn record={record} />} />
       <DataTable.Col source="isActive" label="Active" render={(record) => <BooleanColumn record={record} />} />
     </DataTable>
   </List>

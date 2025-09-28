@@ -31,7 +31,7 @@ export async function registerBuyRequestEditRoute(fastify: FastifyInstance) {
             data,
           });
 
-          reply.status(200).send(buyRequest);
+          return reply.status(200).send(buyRequest);
         } catch (error: any) {
           request.log.error("Error updating buy request:", error);
 

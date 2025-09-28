@@ -46,7 +46,7 @@ export const PlatformConfigurationsListInner = () => {
   }
 
   return (
-    <div className="grid md:grid-cols-2 xl:grid-cols-3 border-b">
+    <div className="grid md:grid-cols-3 border-b">
       {platformAccounts?.map((account) => {
         const config = PLATFORM_CONFIGS[account.platform as keyof typeof PLATFORM_CONFIGS];
 
@@ -56,7 +56,7 @@ export const PlatformConfigurationsListInner = () => {
           <PlatformAccountCard key={account.platform} platform={account.platform} account={account} config={config} />
         );
       })}
-      <div className="xl:block hidden" />
+      <div />
     </div>
   );
 };

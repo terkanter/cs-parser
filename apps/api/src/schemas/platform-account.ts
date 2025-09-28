@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Platform-specific credentials schemas
 export const liskinsCredentialsSchema = z.object({
-  userId: z.coerce.number().int().positive({
+  userId: z.number().int().positive({
     message: "User ID must be a positive number",
   }),
   apiKey: z
@@ -16,7 +16,12 @@ export const liskinsCredentialsSchema = z.object({
     }),
 });
 
-export const csMoneyCredentialsSchema = z.object({});
+export const csMoneyCredentialsSchema = z.object({
+  // Empty for now - будет дополнен когда определим поля
+  // Пример возможных полей:
+  // steamId: z.string().optional(),
+  // tradeUrl: z.string().url().optional(),
+});
 
 // Union type for platform credentials with discriminated union
 export const platformCredentialsSchema = z.discriminatedUnion("platform", [

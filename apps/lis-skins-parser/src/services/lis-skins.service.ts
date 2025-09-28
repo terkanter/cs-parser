@@ -274,12 +274,12 @@ export class LisSkinsService {
 
       const paintSeedMatches = query.paint_seed.some((seedConfig) => {
         if (seedConfig.value !== undefined) {
-          if (item.item_paint_seed !== seedConfig.value) {
-            return false;
+          if (seedConfig.value.includes(item.item_paint_seed!)) {
+            return true;
           }
         }
 
-        return true;
+        return false;
       });
 
       if (!paintSeedMatches) {
@@ -301,7 +301,11 @@ export class LisSkinsService {
     }
 
     for (const seedConfig of query.paint_seed) {
-      if (seedConfig.value !== undefined && seedConfig.value === paintSeed) {
+      if (seedConfig.value === undefined) {
+        continue;
+      }
+
+      if (seedConfig.value.includes(paintSeed)) {
         return seedConfig.name;
       }
     }

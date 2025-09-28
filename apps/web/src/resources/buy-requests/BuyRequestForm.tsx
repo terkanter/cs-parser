@@ -7,33 +7,12 @@ import {
   TextInput,
 } from "@/shared/components/admin";
 import { maxValue, minValue } from "ra-core";
+import { NumberArrayInput } from "./NumberArrayInput";
 
-const qualityChoices = [
-  { id: "FN", name: "Factory New" },
-  { id: "MW", name: "Minimal Wear" },
-  { id: "FT", name: "Field-Tested" },
-  { id: "WW", name: "Well-Worn" },
-  { id: "BS", name: "Battle-Scarred" },
-];
-
-const PriceRangeInput = () => (
-  <div className="grid grid-cols-2 gap-4">
-    <NumberInput source="gte" label="Min Price ($)" validate={[minValue(0)]} />
-    <NumberInput source="lte" label="Max Price ($)" validate={[minValue(0)]} />
-  </div>
-);
-
-const FloatRangeInput = () => (
-  <div className="grid grid-cols-2 gap-4">
-    <NumberInput source="gte" label="Min Float" validate={[minValue(0), maxValue(1)]} step={0.01} />
-    <NumberInput source="lte" label="Max Float" validate={[minValue(0), maxValue(1)]} step={0.01} />
-  </div>
-);
-
-const PaintSeedRangeInput = () => (
-  <div className="grid grid-cols-2 gap-4">
-    <NumberInput source="gte" label="Min Paint Seed" validate={[minValue(0)]} />
-    <NumberInput source="lte" label="Max Paint Seed" validate={[minValue(0)]} />
+const PaintSeedTierInput = () => (
+  <div className="grid grid-cols gap-4">
+    <TextInput source="name" label="Name" />
+    <NumberArrayInput source="value" label="Value" />
   </div>
 );
 
@@ -49,36 +28,26 @@ export const BuyRequestForm = () => (
 
         <div className="border-t py-3 px-6">
           <h4 className="text-sm font-medium">Items</h4>
-          <ArrayInput source="query.item" label="">
-            <SimpleFormIterator>
-              <TextInput source="" label={false} helperText="e.g., AK-47, AWP, etc." />
-            </SimpleFormIterator>
-          </ArrayInput>
+          <TextInput source="query.item" label={false} helperText="e.g., AK-47, AWP, etc." />
         </div>
-        {/* Price Ranges */}
         <div className="border-t py-3 px-6">
-          <h4 className="text-sm font-medium">Price Ranges</h4>
-          <ArrayInput source="query.price" label={false}>
-            <SimpleFormIterator>
-              <PriceRangeInput />
-            </SimpleFormIterator>
-          </ArrayInput>
+          <div className="grid grid-cols-2 gap-4">
+            <NumberInput source="query.price.gte" label="Min Price ($)" validate={[minValue(0)]} />
+            <NumberInput source="query.price.lte" label="Max Price ($)" validate={[minValue(0)]} />
+          </div>
         </div>
-        {/* Float Ranges */}
         <div className="border-t py-3 px-6">
-          <h4 className="text-sm font-medium">Float Ranges</h4>
-          <ArrayInput source="query.float" label={false}>
-            <SimpleFormIterator>
-              <FloatRangeInput />
-            </SimpleFormIterator>
-          </ArrayInput>
+          <div className="grid grid-cols-2 gap-4">
+            <NumberInput source="query.float.gte" label="Min Float" validate={[minValue(0), maxValue(1)]} step={0.01} />
+            <NumberInput source="query.float.lte" label="Max Float" validate={[minValue(0), maxValue(1)]} step={0.01} />
+          </div>
         </div>
-        {/* Paint Seed Ranges */}
+        {/* Paint Seed Tiers */}
         <div className="border-t py-3 px-6 border-b">
-          <h4 className="text-sm font-medium">Paint Seed Ranges</h4>
+          <h4 className="text-sm font-medium mb-2">Paint Seed Tiers</h4>
           <ArrayInput source="query.paint_seed" label={false}>
             <SimpleFormIterator>
-              <PaintSeedRangeInput />
+              <PaintSeedTierInput />
             </SimpleFormIterator>
           </ArrayInput>
         </div>

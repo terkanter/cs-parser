@@ -9,6 +9,7 @@ const paramsSchema = z.object({
 });
 
 export async function registerPlatformAccountUpsertRoute(fastify: FastifyInstance) {
+  // PUT /platform-accounts/:platform - Create or update platform account
   fastify
     .withTypeProvider<ZodTypeProvider>()
     .put<{ Params: z.infer<typeof paramsSchema>; Body: z.infer<typeof upsertPlatformAccountBodySchema> }>(
@@ -27,6 +28,7 @@ export async function registerPlatformAccountUpsertRoute(fastify: FastifyInstanc
           const { platform } = request.params;
           const credentialsData = request.body;
 
+          // Validate credentials using platform-specific schema
           let validatedCredentials;
           try {
             validatedCredentials = validatePlatformCredentials(platform, credentialsData);
@@ -54,16 +56,13 @@ export async function registerPlatformAccountUpsertRoute(fastify: FastifyInstanc
               credentials: validatedCredentials,
               userId: user.id,
             },
-            select: {
-              platform: true,
-              credentials: true,
-              userId: true,
-            },
           });
 
           return reply.status(200).send({
-            ...platformAccount,
-            id: platform,
+            id: platformAccount.id,
+            platform: platformAccount.platform,
+            credentials: platformAccount.credentials,
+            userId: platformAccount.userId,
           });
         } catch (error) {
           request.log.error("Error upserting platform account:", error);

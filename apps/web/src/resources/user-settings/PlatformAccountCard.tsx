@@ -53,8 +53,10 @@ export const PlatformAccountCard = ({ platform, account, config }: PlatformAccou
   };
 
   return (
-    <div className="space-y-8 p-6 pt-4 not-last:border-r">
-      <h3 className="text-md font-semibold">{config.name}</h3>
+    <div className="space-y-4 p-6 not-last:border-r">
+      <div className="flex items-center gap-2">
+        <h3 className="text-md font-semibold">{config.name}</h3>
+      </div>
 
       {config.fields.length === 0 ? (
         <div className="text-sm py-4 text-muted-foreground">No configuration required for this platform yet.</div>
@@ -63,8 +65,10 @@ export const PlatformAccountCard = ({ platform, account, config }: PlatformAccou
           record={account.credentials}
           onSubmit={handleSave}
           toolbar={
-            <div className="flex justify-start">
-              <Button type="submit">Save</Button>
+            <div className="flex justify-start pt-4">
+              <Button type="submit" size="sm">
+                Save
+              </Button>
             </div>
           }
         >
