@@ -1,23 +1,6 @@
-import { QUEUES } from "@repo/api-core";
 import amqp from "amqplib";
 import { env } from "../env";
 import { logger } from "../utils/logger";
-
-export interface FoundItemMessage {
-  buyRequestId: string;
-  userId: string;
-  platform: string;
-  item: {
-    name: string;
-    price: number;
-    float: number;
-    paintSeed: number;
-    quality: string;
-    url: string;
-    imageUrl?: string;
-  };
-  foundAt: Date;
-}
 
 class RabbitMQConsumer {
   private connection: amqp.ChannelModel | null = null;
@@ -28,9 +11,6 @@ class RabbitMQConsumer {
       this.connection = await amqp.connect(env.RABBITMQ_URL);
       this.channel = await this.connection.createChannel();
 
-      // Ensure the queue exists
-      await this.channel.assertQueue(QUEUES.TELEGRAM_NOTIFICATIONS, { durable: true });
-
       logger.info("RabbitMQ consumer connected successfully");
     } catch (error) {
       logger.withError(error).error("Failed to connect to RabbitMQ");
@@ -38,33 +18,54 @@ class RabbitMQConsumer {
     }
   }
 
-  async startConsuming(messageHandler: (message: FoundItemMessage) => Promise<void>): Promise<void> {
+  async setupExchangeBinding(
+    exchangeName: string,
+    queueName: string,
+    routingKey: string,
+    exchangeType: string = "direct"
+  ): Promise<void> {
     if (!this.channel) {
       throw new Error("RabbitMQ channel not initialized");
     }
 
-    // Set QoS to process one message at a time
-    await this.channel.prefetch(1);
+    await this.channel.assertExchange(exchangeName, exchangeType, { durable: true });
+    await this.channel.assertQueue(queueName, { durable: true });
 
-    await this.channel.consume(QUEUES.TELEGRAM_NOTIFICATIONS, async (msg) => {
+    await this.channel.bindQueue(queueName, exchangeName, routingKey);
+
+    logger.info(`Set up binding: exchange=${exchangeName}, queue=${queueName}, routingKey=${routingKey}`);
+  }
+
+  async startConsuming<T>(
+    queueName: string,
+    messageHandler: (message: T) => Promise<void>,
+    options: { prefetch?: number } = {}
+  ): Promise<void> {
+    if (!this.channel) {
+      throw new Error("RabbitMQ channel not initialized");
+    }
+
+    const { prefetch = 1 } = options;
+
+    await this.channel.prefetch(prefetch);
+
+    await this.channel.consume(queueName, async (msg) => {
       if (!msg) return;
 
       try {
-        const message: FoundItemMessage = JSON.parse(msg.content.toString());
+        const message: T = JSON.parse(msg.content.toString());
         await messageHandler(message);
 
-        // Acknowledge the message
         this.channel!.ack(msg);
-        logger.withContext({ buyRequestId: message.buyRequestId }).info("Processed notification message");
+        logger.debug("Processed message successfully");
       } catch (error) {
         logger.withError(error).error("Error processing message");
 
-        // Reject and requeue the message
         this.channel!.nack(msg, false, true);
       }
     });
 
-    logger.info("Started consuming RabbitMQ messages");
+    logger.info(`Started consuming messages from queue: ${queueName}`);
   }
 
   async close(): Promise<void> {

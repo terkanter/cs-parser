@@ -1,43 +1,28 @@
 import { telegramBot } from "./bot/bot";
 import { env } from "./env";
 import { connectDatabase, disconnectDatabase } from "./services/database";
-import { type FoundItemMessage, rabbitmqConsumer } from "./services/rabbitmq";
+import { notificationService } from "./services/notification.service";
+import { rabbitmqConsumer } from "./services/rabbitmq";
 import { logger } from "./utils/logger";
 
 async function main() {
   logger.withContext({ environment: env.NODE_ENV }).info("Starting Telegram Bot Service...");
 
   try {
-    // Connect to services
     await connectDatabase();
     await rabbitmqConsumer.connect();
 
-    // Start Telegram bot
-    await telegramBot.start();
+    telegramBot.start();
 
-    // Start consuming RabbitMQ messages
-    await rabbitmqConsumer.startConsuming(handleFoundItemMessage);
+    await notificationService.startListening();
 
     logger.info("Telegram Bot Service started successfully");
 
-    // Handle graceful shutdown
     process.on("SIGINT", shutdown);
     process.on("SIGTERM", shutdown);
   } catch (error) {
     logger.withError(error).error("Failed to start Telegram Bot Service");
     process.exit(1);
-  }
-}
-
-async function handleFoundItemMessage(message: FoundItemMessage): Promise<void> {
-  try {
-    logger.withContext({ buyRequestId: message.buyRequestId }).info("Received found item message");
-
-    // Send notification to user
-    await telegramBot.sendFoundItemNotification(message.userId, message);
-  } catch (error) {
-    logger.withError(error).error("Error handling found item message");
-    throw error; // Re-throw to trigger message requeue
   }
 }
 

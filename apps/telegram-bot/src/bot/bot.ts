@@ -1,7 +1,7 @@
 import { prisma } from "@repo/prisma";
 import { Bot, type Context, type SessionFlavor, session } from "grammy";
 import { env } from "../env";
-import type { FoundItemMessage } from "../services/rabbitmq";
+import type { FoundItemMessage } from "@repo/api-core";
 import { logger } from "../utils/logger";
 
 interface SessionData {
@@ -174,10 +174,10 @@ export class TelegramBot {
         `🎲 Paint Seed: ${item.paintSeed}\n` +
         `⭐ Качество: ${item.quality}\n` +
         `🏪 Площадка: ${message.platform}\n\n` +
-        `🔗 [Перейти к предмету](${item.url})`;
+        `🔗 Холд: ${item.unlockAt}`;
 
       await this.bot.api.sendMessage(user.telegramId, text, {
-        parse_mode: "Markdown",
+        // parse_mode: "markdown",
         // disable_web_page_preview: true,
       });
 
@@ -190,17 +190,7 @@ export class TelegramBot {
   async start(): Promise<void> {
     logger.info("Starting Telegram bot...");
 
-    // if (env.WEBHOOK_URL) {
-    //   // Production: use webhooks
-    //   await this.bot.api.setWebhook(env.WEBHOOK_URL, {
-    //     secret_token: env.WEBHOOK_SECRET
-    //   })
-    //   logger.info('Webhook set successfully')
-    // } else {
-    // Development: use long polling
-    await this.bot.start();
-    logger.info("Bot started with long polling");
-    // }
+    this.bot.start();
   }
 
   async stop(): Promise<void> {

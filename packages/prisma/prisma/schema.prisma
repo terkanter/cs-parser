@@ -89,7 +89,6 @@ model Verification {
 
 model BuyRequest {
   id        String   @id @default(uuid())
-  platform  Platform
   query     Json
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

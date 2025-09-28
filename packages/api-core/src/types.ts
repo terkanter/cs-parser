@@ -1,7 +1,6 @@
 export interface BuyRequestQuery {
-  price?: Array<{ gte?: number; lte?: number }>;
-  float?: Array<{ gte?: number; lte?: number }>;
-  paint_seed?: Array<{ gte?: number; lte?: number }>;
-  item?: string[];
-  quality?: string[];
+  price?: { gte?: number; lte?: number };
+  float?: { gte?: number; lte?: number };
+  paint_seed?: Array<{ value?: number; tier?: number }>;
+  item: string;
 }

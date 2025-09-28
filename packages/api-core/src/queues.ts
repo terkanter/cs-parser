@@ -27,6 +27,24 @@ export const TOPICS = {
   USER_NOTIFICATION: "user.notification",
 } as const;
 
+// Message types
+export interface FoundItemMessage {
+  buyRequestId: string;
+  userId: string;
+  platform: string;
+  item: {
+    name: string;
+    price: number;
+    float: number;
+    paintSeed: number;
+    paintSeedTier?: number;
+    quality: string;
+    url: string;
+    imageUrl?: string;
+  };
+  foundAt: Date;
+}
+
 // Type exports for type safety
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
 export type ExchangeName = (typeof EXCHANGES)[keyof typeof EXCHANGES];

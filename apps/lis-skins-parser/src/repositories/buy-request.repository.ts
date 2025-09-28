@@ -5,7 +5,6 @@ export class BuyRequestRepository {
     return await prisma.buyRequest.findMany({
       where: {
         isActive: true,
-        platform: Platform.LIS_SKINS,
       },
     });
   }
@@ -21,7 +20,6 @@ export class BuyRequestRepository {
       where: {
         createdByUserId: userId,
         isActive: true,
-        platform: Platform.LIS_SKINS,
       },
     });
   }

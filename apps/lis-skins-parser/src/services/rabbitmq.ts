@@ -1,23 +1,7 @@
-import { EXCHANGES, QUEUES, ROUTING_KEYS } from "@repo/api-core";
+import { EXCHANGES, QUEUES, ROUTING_KEYS, type FoundItemMessage } from "@repo/api-core";
 import amqp from "amqplib";
 import { env } from "../env";
 import { logger } from "../utils/logger";
-
-export interface FoundItemMessage {
-  buyRequestId: string;
-  userId: string;
-  platform: string;
-  item: {
-    name: string;
-    price: number;
-    float: number;
-    paintSeed: number;
-    quality: string;
-    url: string;
-    imageUrl?: string;
-  };
-  foundAt: Date;
-}
 
 class RabbitMQService {
   private connection: amqp.ChannelModel | null = null;
