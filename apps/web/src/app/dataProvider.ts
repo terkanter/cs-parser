@@ -102,7 +102,7 @@ export const dataProvider = {
   },
 
   create: async (resource: string, params: any) => {
-    const { json } = await httpClient(`${getResourceUrl(resource)}`, {
+    const { json } = await httpClient(`${getResourceUrl(resource)}/${params.id}`, {
       method: "POST",
       body: JSON.stringify(params.data),
     });
@@ -110,16 +110,6 @@ export const dataProvider = {
   },
 
   update: async (resource: string, params: any) => {
-    // Handle special case for users/me
-    if (resource === "users" && params.id === "me") {
-      const url = getResourceUrl(resource);
-      const { json } = await httpClient(url, {
-        method: "PUT",
-        body: JSON.stringify(params.data),
-      });
-      return { data: json };
-    }
-
     const url = `${getResourceUrl(resource)}/${encodeURIComponent(params.id)}`;
     const { json } = await httpClient(url, {
       method: "PUT",
