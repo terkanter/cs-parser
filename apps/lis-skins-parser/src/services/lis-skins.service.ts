@@ -1,10 +1,10 @@
 import type { BuyRequestQuery } from "@repo/api-core";
-import { Platform, type BuyRequest } from "@repo/prisma";
+import { type BuyRequest, Platform } from "@repo/prisma";
+import { LIS_SKINS_API_URL, LIS_SKINS_WEBSOCKET_URL } from "../consts";
+import { BuyRequestRepository, PlatformAccountRepository } from "../repositories";
 import { logger } from "../utils/logger";
 import { rabbitmqService } from "./rabbitmq";
-import { websocketManager, type WebSocketConnectionConfig } from "./websocket-manager";
-import { BuyRequestRepository, PlatformAccountRepository } from "../repositories";
-import { LIS_SKINS_API_URL, LIS_SKINS_WEBSOCKET_URL } from "../consts";
+import { type WebSocketConnectionConfig, websocketManager } from "./websocket-manager";
 
 interface LisSkinsWebSocketItem {
   id: number;
@@ -23,7 +23,7 @@ interface LisSkinsWebSocketItem {
   item_class_id: string;
   item_paint_seed: number | null;
   item_paint_index: number | null;
-  event: 'obtained_skin_added' | 'obtained_skin_deleted' | 'obtained_skin_price_changed';
+  event: "obtained_skin_added" | "obtained_skin_deleted" | "obtained_skin_price_changed";
 }
 
 export class LisSkinsService {
@@ -38,13 +38,13 @@ export class LisSkinsService {
 
   constructor(
     private buyRequestRepository: BuyRequestRepository,
-    private platformAccountRepository: PlatformAccountRepository
+    private platformAccountRepository: PlatformAccountRepository,
   ) {}
 
   async addBuyRequest(buyRequest: BuyRequest): Promise<void> {
     this.activeBuyRequests.set(buyRequest.id, buyRequest);
     logger.info(`Added buy request ${buyRequest.id} to monitoring`);
-    
+
     if (!websocketManager.connection && this.activeBuyRequests.size === 1) {
       await this.startGlobalConnection();
     }
@@ -54,7 +54,7 @@ export class LisSkinsService {
     if (this.activeBuyRequests.has(buyRequestId)) {
       this.activeBuyRequests.delete(buyRequestId);
       logger.info(`Removed buy request ${buyRequestId} from monitoring`);
-      
+
       if (this.activeBuyRequests.size === 0 && websocketManager.connection) {
         await this.stopGlobalConnection();
       }
@@ -92,7 +92,7 @@ export class LisSkinsService {
 
     await websocketManager.stopConnection();
     this.activeBuyRequests.clear();
-    
+
     await rabbitmqService.close();
   }
 
@@ -114,23 +114,23 @@ export class LisSkinsService {
 
       const authToken = Array.from(this.userTokens.values())[0];
       this.connectionStartTime = new Date();
-      
+
       const config: WebSocketConnectionConfig<LisSkinsWebSocketItem> = {
         url: LIS_SKINS_WEBSOCKET_URL,
-        channel: 'public:obtained-skins',
+        channel: "public:obtained-skins",
         subscribeOptions: {
-            since: {
-                offset: 0,
-                epoch: new Date().toISOString(),
-            },
+          since: {
+            offset: 0,
+            epoch: new Date().toISOString(),
+          },
           data: {
-            game: 'csgo',
-            sort_by: 'newest'
-          }
+            game: "csgo",
+            sort_by: "newest",
+          },
         },
         getToken: async () => authToken,
         onMessage: (data) => this.handleGlobalMessage(data),
-        onError: (error, ) => this.handleGlobalError(error, ),
+        onError: (error) => this.handleGlobalError(error),
         onClose: () => this.handleGlobalClose(),
         onOpen: () => this.handleGlobalOpen(),
       };
@@ -149,31 +149,31 @@ export class LisSkinsService {
 
   private async handleGlobalMessage(item: LisSkinsWebSocketItem): Promise<void> {
     try {
-        const itemCreatedAt = new Date(item.created_at);
-        if (itemCreatedAt < this.connectionStartTime) {
-          return;
-        }
+      const itemCreatedAt = new Date(item.created_at);
+      if (itemCreatedAt < this.connectionStartTime) {
+        return;
+      }
 
-      if (item.event === 'obtained_skin_deleted') {
+      if (item.event === "obtained_skin_deleted") {
         logger.debug(`Skipping deleted item: ${item.name}`);
         return;
       }
 
-      if (item.event !== 'obtained_skin_added' && item.event !== 'obtained_skin_price_changed') {
+      if (item.event !== "obtained_skin_added" && item.event !== "obtained_skin_price_changed") {
         logger.debug(`Skipping unknown event: ${item.event}`);
         return;
       }
-      
+
       for (const [_, buyRequest] of this.activeBuyRequests) {
         const query = buyRequest.query as unknown as BuyRequestQuery;
 
         if (this.matchesQuery(item, query)) {
           const paintSeedTier = this.getPaintSeedTier(item.item_paint_seed, query);
-          
+
           const foundItem = {
             name: item.name,
             price: item.price,
-            float: item.item_float,
+            float: Number.parseFloat(item.item_float),
             paintSeed: item.item_paint_seed || 0,
             paintSeedTier,
             quality: this.extractQuality(item.name),
@@ -189,14 +189,16 @@ export class LisSkinsService {
           });
 
           logger
-            .withContext({ 
-              buyRequestId: buyRequest.id, 
-              itemName: item.name, 
+            .withContext({
+              buyRequestId: buyRequest.id,
+              itemName: item.name,
               price: item.price,
               paintSeed: item.item_paint_seed,
               event: item.event,
             })
-            .info(`Found matching item via WebSocket: ${item.name} - $${item.price} (${item.event}) ${itemCreatedAt.toISOString()}`);
+            .info(
+              `Found matching item via WebSocket: ${item.name} - $${item.price} (${item.event}) ${itemCreatedAt.toISOString()}`,
+            );
         }
       }
     } catch (error) {
@@ -204,21 +206,21 @@ export class LisSkinsService {
     }
   }
 
-  private async handleGlobalError(error: Error, ): Promise<void> {
-    logger.withError(error).error(`Global WebSocket error for connection`);
+  private async handleGlobalError(error: Error): Promise<void> {
+    logger.withError(error).error("Global WebSocket error for connection");
     await this.scheduleReconnect();
   }
 
   private async handleGlobalClose(): Promise<void> {
-    logger.warn(`Global WebSocket closed for connection`);
-    
+    logger.warn("Global WebSocket closed for connection");
+
     if (this.isRunning && this.activeBuyRequests.size > 0) {
       await this.scheduleReconnect();
     }
   }
 
   private handleGlobalOpen(): void {
-    logger.info(`Global WebSocket opened for connection`);
+    logger.info("Global WebSocket opened for connection");
     this.reconnectAttempts = 0;
   }
 
@@ -229,10 +231,10 @@ export class LisSkinsService {
     }
 
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1); // Exponential backoff
-    
+    const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1); // Exponential backoff
+
     logger.info(`Scheduling reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`);
-    
+
     setTimeout(async () => {
       if (this.isRunning && this.activeBuyRequests.size > 0) {
         logger.info(`Attempting to reconnect (attempt ${this.reconnectAttempts})`);
@@ -247,7 +249,7 @@ export class LisSkinsService {
     }
 
     if (query.float) {
-      const itemFloat = parseFloat(item.item_float);
+      const itemFloat = Number.parseFloat(item.item_float);
       if (query.float.gte !== undefined && itemFloat < query.float.gte) {
         return false;
       }
@@ -270,13 +272,13 @@ export class LisSkinsService {
         return false;
       }
 
-      const paintSeedMatches = query.paint_seed.some(seedConfig => {
+      const paintSeedMatches = query.paint_seed.some((seedConfig) => {
         if (seedConfig.value !== undefined) {
           if (item.item_paint_seed !== seedConfig.value) {
             return false;
           }
         }
-        
+
         return true;
       });
 
@@ -293,14 +295,14 @@ export class LisSkinsService {
     return qualityMatch ? qualityMatch[1] : "Unknown";
   }
 
-  private getPaintSeedTier(paintSeed: number | null, query: BuyRequestQuery): number | undefined {
+  private getPaintSeedTier(paintSeed: number | null, query: BuyRequestQuery): string | undefined {
     if (paintSeed === null || !query.paint_seed) {
       return undefined;
     }
 
     for (const seedConfig of query.paint_seed) {
       if (seedConfig.value !== undefined && seedConfig.value === paintSeed) {
-        return seedConfig.tier;
+        return seedConfig.name;
       }
     }
 
@@ -308,62 +310,63 @@ export class LisSkinsService {
   }
 
   private async loadUserTokens(buyRequests: BuyRequest[]): Promise<void> {
-    const userIds = [...new Set(buyRequests.map(br => br.createdByUserId))];
-    
+    const userIds = [...new Set(buyRequests.map((br) => br.createdByUserId))];
+
     this.userTokens.clear();
-    
+
     for (const userId of userIds) {
       try {
         const auth = await this.platformAccountRepository.findLisSkinsAccountByUserId(userId);
-        
+
         if (!auth) {
           logger.error(`No LIS-Skins authentication found for user ${userId}`);
           continue;
         }
 
-        const authToken = await this.getWebSocketToken((auth.credentials as {apiKey: string}).apiKey);
+        const authToken = await this.getWebSocketToken((auth.credentials as { apiKey: string }).apiKey);
         this.userTokens.set(userId, authToken);
-        
+
         logger.debug(`Loaded auth token for user ${userId}`);
       } catch (error) {
         logger.withError(error).error(`Failed to load auth token for user ${userId}`);
       }
     }
-    
+
     logger.info(`Loaded tokens for ${this.userTokens.size} users`);
   }
 
   private async loadUserTokensForNewRequests(newBuyRequests: BuyRequest[]): Promise<void> {
-    const newUserIds = [...new Set(newBuyRequests.map(br => br.createdByUserId))]
-      .filter(userId => !this.userTokens.has(userId));
-    
+    const newUserIds = [...new Set(newBuyRequests.map((br) => br.createdByUserId))].filter(
+      (userId) => !this.userTokens.has(userId),
+    );
+
     if (newUserIds.length === 0) {
       return;
     }
-    
+
     for (const userId of newUserIds) {
       try {
         const auth = await this.platformAccountRepository.findLisSkinsAccountByUserId(userId);
-        
+
         if (!auth) {
           logger.error(`No LIS-Skins authentication found for user ${userId}`);
           continue;
         }
 
-        const authToken = await this.getWebSocketToken((auth.credentials as {apiKey: string}).apiKey);
+        const authToken = await this.getWebSocketToken((auth.credentials as { apiKey: string }).apiKey);
         this.userTokens.set(userId, authToken);
-        
+
         logger.debug(`Loaded auth token for new user ${userId}`);
       } catch (error) {
         logger.withError(error).error(`Failed to load auth token for user ${userId}`);
       }
     }
-    
+
     logger.info(`Loaded tokens for ${newUserIds.length} new users`);
   }
 
   private cleanupUnusedTokens(activeBuyRequests: BuyRequest[]): void {
-    const activeUserIds = new Set(activeBuyRequests.map(br => br.createdByUserId));
+    const activeUserIds = new Set(activeBuyRequests.map((br) => br.createdByUserId));
     const tokensToRemove: string[] = [];
 
     for (const userId of this.userTokens.keys()) {
@@ -387,7 +390,7 @@ export class LisSkinsService {
       logger.info("Initializing WebSocket connection...");
 
       const buyRequests = await this.buyRequestRepository.findActiveLisSkinsBuyRequests();
-      
+
       if (buyRequests.length === 0) {
         logger.info("No active buy requests found");
         return;
@@ -410,9 +413,9 @@ export class LisSkinsService {
   private async updateConnections(): Promise<void> {
     try {
       const buyRequests = await this.buyRequestRepository.findActiveLisSkinsBuyRequests();
-      const currentBuyRequestIds = new Set(buyRequests.map(br => br.id));
+      const currentBuyRequestIds = new Set(buyRequests.map((br) => br.id));
 
-      const newBuyRequests = buyRequests.filter(br => !this.activeBuyRequests.has(br.id));
+      const newBuyRequests = buyRequests.filter((br) => !this.activeBuyRequests.has(br.id));
       if (newBuyRequests.length > 0) {
         await this.loadUserTokensForNewRequests(newBuyRequests);
       }
@@ -441,21 +444,21 @@ export class LisSkinsService {
     try {
       const response = await fetch(`${LIS_SKINS_API_URL}user/get-ws-token`, {
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
       });
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error('Unauthorized: Invalid API key');
+          throw new Error("Unauthorized: Invalid API key");
         }
         throw new Error(`Unexpected status code ${response.status}`);
       }
 
-      const json = await response.json() as { data: { token: string } };
+      const json = (await response.json()) as { data: { token: string } };
       return json.data.token;
     } catch (error) {
-      logger.withError(error).error('Failed to get WebSocket token');
+      logger.withError(error).error("Failed to get WebSocket token");
       throw error;
     }
   }

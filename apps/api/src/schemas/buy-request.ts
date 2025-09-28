@@ -1,24 +1,25 @@
 import { z } from "zod";
 
+export const paintSeedTierSchema = z.object({
+  value: z.number().optional(),
+  name: z.string().optional(),
+});
+
 export const queryFieldSchema = z.object({
-  price:
-      z.object({
-        gte: z.number().optional(),
-        lte: z.number().optional(),
-      }).optional(),
-  float: z.object({
+  price: z
+    .object({
       gte: z.number().optional(),
       lte: z.number().optional(),
-    }).optional(),
-  paint_seed: z
-    .array(
-      z.object({
-        value: z.number().optional(),
-        tier: z.number().optional(),
-      }),
-    )
+    })
     .optional(),
-  item: z.string()
+  float: z
+    .object({
+      gte: z.number().optional(),
+      lte: z.number().optional(),
+    })
+    .optional(),
+  paint_seed: z.array(paintSeedTierSchema).optional(),
+  item: z.string(),
 });
 
 export const buyRequestSchema = z.object({

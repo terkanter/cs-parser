@@ -22,7 +22,7 @@ class RabbitMQConsumer {
     exchangeName: string,
     queueName: string,
     routingKey: string,
-    exchangeType: string = "direct"
+    exchangeType = "direct",
   ): Promise<void> {
     if (!this.channel) {
       throw new Error("RabbitMQ channel not initialized");
@@ -39,7 +39,7 @@ class RabbitMQConsumer {
   async startConsuming<T>(
     queueName: string,
     messageHandler: (message: T) => Promise<void>,
-    options: { prefetch?: number } = {}
+    options: { prefetch?: number } = {},
   ): Promise<void> {
     if (!this.channel) {
       throw new Error("RabbitMQ channel not initialized");

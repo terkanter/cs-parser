@@ -22,13 +22,12 @@ interface CentrifugeConnection {
 }
 
 class CentrifugeManager {
-connection: CentrifugeConnection | null = null;
+  connection: CentrifugeConnection | null = null;
 
   async startConnection<T>(config: WebSocketConnectionConfig<T>): Promise<void> {
-    
     try {
       const { centrifuge, subscription } = this.createCentrifugeConnection(config);
-      
+
       const connection: CentrifugeConnection = {
         centrifuge,
         subscription,
@@ -41,9 +40,9 @@ connection: CentrifugeConnection | null = null;
 
       centrifuge.connect();
 
-      logger.info(`Started Centrifuge connection`);
+      logger.info("Started Centrifuge connection");
     } catch (error) {
-      logger.withError(error).error(`Failed to start Centrifuge connection`);
+      logger.withError(error).error("Failed to start Centrifuge connection");
       config.onError(error as Error);
     }
   }
@@ -55,11 +54,14 @@ connection: CentrifugeConnection | null = null;
 
     this.connection.subscription.unsubscribe();
     this.connection.centrifuge.disconnect();
-    
-    logger.info(`Stopped Centrifuge connection`);
+
+    logger.info("Stopped Centrifuge connection");
   }
 
-  private createCentrifugeConnection<T>(config: WebSocketConnectionConfig<T>): { centrifuge: Centrifuge; subscription: Subscription } {
+  private createCentrifugeConnection<T>(config: WebSocketConnectionConfig<T>): {
+    centrifuge: Centrifuge;
+    subscription: Subscription;
+  } {
     const centrifuge = new Centrifuge(config.url, {
       websocket: WebSocket,
       getToken: config.getToken,
@@ -73,46 +75,46 @@ connection: CentrifugeConnection | null = null;
   private setupCentrifugeHandlers(connection: CentrifugeConnection): void {
     const { centrifuge, subscription, config } = connection;
 
-    centrifuge.on('connected', () => {
+    centrifuge.on("connected", () => {
       connection.isConnected = true;
       connection.reconnectAttempts = 0;
-      logger.info(`Centrifuge connected for connection`);
+      logger.info("Centrifuge connected for connection");
       config.onOpen();
     });
 
-    centrifuge.on('disconnected', (ctx) => {
+    centrifuge.on("disconnected", (ctx) => {
       connection.isConnected = false;
       logger.warn(`Centrifuge disconnected for connection. Code: ${ctx.code}, Reason: ${ctx.reason}`);
       config.onClose();
     });
 
-    centrifuge.on('error', (ctx) => {
-      const error = new Error(ctx.error.message || 'Centrifuge error');
-      logger.withError(error).error(`Centrifuge error for connection`);
+    centrifuge.on("error", (ctx) => {
+      const error = new Error(ctx.error.message || "Centrifuge error");
+      logger.withError(error).error("Centrifuge error for connection");
       connection.isConnected = false;
       config.onError(error);
     });
 
-    subscription.on('publication', async (ctx) => {
+    subscription.on("publication", async (ctx) => {
       try {
         await config.onMessage(ctx.data);
       } catch (error) {
-        logger.withError(error).error(`Error processing Centrifuge message for connection`);
+        logger.withError(error).error("Error processing Centrifuge message for connection");
         config.onError(error as Error);
       }
     });
 
-    subscription.on('subscribed', () => {
+    subscription.on("subscribed", () => {
       logger.info(`Subscribed to channel ${config.channel} for connection`);
     });
 
-    subscription.on('unsubscribed', () => {
+    subscription.on("unsubscribed", () => {
       logger.info(`Unsubscribed from channel ${config.channel} for connection`);
     });
 
-    subscription.on('error', (ctx) => {
-      const error = new Error(ctx.error.message || 'Subscription error');
-      logger.withError(error).error(`Subscription error for connection`);
+    subscription.on("error", (ctx) => {
+      const error = new Error(ctx.error.message || "Subscription error");
+      logger.withError(error).error("Subscription error for connection");
       config.onError(error);
     });
 

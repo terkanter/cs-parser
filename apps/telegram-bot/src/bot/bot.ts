@@ -1,7 +1,7 @@
+import type { FoundItemMessage } from "@repo/api-core";
 import { prisma } from "@repo/prisma";
 import { Bot, type Context, type SessionFlavor, session } from "grammy";
 import { env } from "../env";
-import type { FoundItemMessage } from "@repo/api-core";
 import { logger } from "../utils/logger";
 
 interface SessionData {
@@ -62,7 +62,7 @@ export class TelegramBot {
         }
 
         await ctx.reply(
-          "🔗 Для привязки аккаунта:\n\n" +
+          `🔗 Для привязки аккаунта:\n\n` +
             "1. Зайдите в веб-приложение\n" +
             "2. Перейдите в настройки профиля\n" +
             "3. Введите ваш Telegram ID: `" +

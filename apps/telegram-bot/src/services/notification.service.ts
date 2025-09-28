@@ -1,4 +1,4 @@
-import { EXCHANGES, QUEUES, ROUTING_KEYS, type FoundItemMessage } from "@repo/api-core";
+import { EXCHANGES, type FoundItemMessage, QUEUES, ROUTING_KEYS } from "@repo/api-core";
 import { telegramBot } from "../bot/bot";
 import { logger } from "../utils/logger";
 import { rabbitmqConsumer } from "./rabbitmq";
@@ -8,14 +8,14 @@ class NotificationService {
     await rabbitmqConsumer.setupExchangeBinding(
       EXCHANGES.ITEMS_FOUND,
       QUEUES.TELEGRAM_NOTIFICATIONS,
-      ROUTING_KEYS.ITEM_FOUND
+      ROUTING_KEYS.ITEM_FOUND,
     );
 
     await rabbitmqConsumer.startConsuming<FoundItemMessage>(
       QUEUES.TELEGRAM_NOTIFICATIONS,
-      this.handleFoundItemMessage.bind(this)
+      this.handleFoundItemMessage.bind(this),
     );
-    
+
     logger.info("Notification service started listening for messages");
   }
 
