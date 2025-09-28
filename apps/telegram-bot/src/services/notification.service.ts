@@ -1,19 +1,35 @@
-import { EXCHANGES, type FoundItemMessage, QUEUES, ROUTING_KEYS } from "@repo/api-core";
+import { EXCHANGES, type FoundItemMessage, type BuyResponseMessage, QUEUES, ROUTING_KEYS } from "@repo/api-core";
 import { telegramBot } from "../bot/bot";
 import { logger } from "../utils/logger";
 import { rabbitmqConsumer } from "./rabbitmq";
 
 class NotificationService {
   async startListening(): Promise<void> {
+    // Setup bindings for found items
     await rabbitmqConsumer.setupExchangeBinding(
       EXCHANGES.ITEMS_FOUND,
       QUEUES.TELEGRAM_NOTIFICATIONS,
       ROUTING_KEYS.ITEM_FOUND,
     );
 
+    // Setup bindings for buy responses
+    await rabbitmqConsumer.setupExchangeBinding(
+      EXCHANGES.BUY_REQUESTS,
+      QUEUES.BUY_RESPONSES,
+      ROUTING_KEYS.BUY_RESPONSE,
+    );
+
+    // Start consuming found items
     await rabbitmqConsumer.startConsuming<FoundItemMessage>(
       QUEUES.TELEGRAM_NOTIFICATIONS,
       this.handleFoundItemMessage.bind(this),
+    );
+
+    // Start consuming buy responses
+    await rabbitmqConsumer.startConsuming<BuyResponseMessage>(
+      QUEUES.BUY_RESPONSES,
+      this.handleBuyResponseMessage.bind(this),
+      { prefetch: 10 } // Allow more concurrent buy responses
     );
 
     logger.info("Notification service started listening for messages");
@@ -28,6 +44,22 @@ class NotificationService {
       logger.withContext({ buyRequestId: message.buyRequestId }).info("Processed notification message");
     } catch (error) {
       logger.withError(error).error("Error handling found item message");
+      throw error;
+    }
+  }
+
+  private async handleBuyResponseMessage(message: BuyResponseMessage): Promise<void> {
+    try {
+      logger.withContext({ 
+        buyRequestId: message.buyRequestId, 
+        success: message.success 
+      }).info("Received buy response message");
+
+      await telegramBot.sendBuyResponseNotification(message);
+
+      logger.withContext({ buyRequestId: message.buyRequestId }).info("Processed buy response message");
+    } catch (error) {
+      logger.withError(error).error("Error handling buy response message");
       throw error;
     }
   }

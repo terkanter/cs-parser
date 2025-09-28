@@ -1,8 +1,9 @@
-import type { FoundItemMessage } from "@repo/api-core";
+import type { FoundItemMessage, BuyResponseMessage } from "@repo/api-core";
 import { prisma } from "@repo/prisma";
-import { Bot, type Context, type SessionFlavor, session } from "grammy";
+import { Bot, type Context, type SessionFlavor, session, InlineKeyboard } from "grammy";
 import { env } from "../env";
 import { logger } from "../utils/logger";
+import { rabbitmqProducer } from "../services/rabbitmq-producer";
 
 interface SessionData {
   step?: string;
@@ -146,10 +147,66 @@ export class TelegramBot {
       );
     });
 
+    // Handle callback queries (inline keyboard buttons)
+    this.bot.on("callback_query", async (ctx) => {
+      const data = ctx.callbackQuery.data;
+      
+      if (data?.startsWith("buy_")) {
+        await this.handleBuyRequest(ctx, data);
+      } else {
+        await ctx.answerCallbackQuery("Неизвестная команда");
+      }
+    });
+
     // Handle unknown messages
     this.bot.on("message", async (ctx) => {
       await ctx.reply("🤔 Не понимаю эту команду.\n" + "Используйте /help для списка доступных команд.");
     });
+  }
+
+  private async handleBuyRequest(ctx: any, callbackData: string): Promise<void> {
+    try {
+      // Parse callback data: "buy_{buyRequestId}_{platform}"
+      const parts = callbackData.split("_");
+      if (parts.length !== 3) {
+        await ctx.answerCallbackQuery("❌ Некорректные данные");
+        return;
+      }
+
+      const [, buyRequestId, platform] = parts;
+      const telegramId = ctx.from?.id.toString();
+      
+      if (!telegramId) {
+        await ctx.answerCallbackQuery("❌ Ошибка идентификации");
+        return;
+      }
+
+      // Find user by telegram ID
+      const user = await prisma.user.findFirst({
+        where: { telegramId },
+      });
+
+      if (!user) {
+        await ctx.answerCallbackQuery("❌ Аккаунт не привязан");
+        return;
+      }
+
+      // Send buy request message to RabbitMQ
+      await rabbitmqProducer.publishBuyRequest({
+        buyRequestId,
+        userId: user.id,
+        platform,
+        telegramMessageId: ctx.callbackQuery.message?.message_id,
+        telegramChatId: ctx.callbackQuery.message?.chat.id.toString(),
+      });
+
+      await ctx.answerCallbackQuery("🔄 Обрабатываем покупку...");
+      
+      logger.withContext({ buyRequestId, userId: user.id, platform }).info("Sent buy request to queue");
+    } catch (error) {
+      logger.withError(error).error("Error handling buy request");
+      await ctx.answerCallbackQuery("❌ Произошла ошибка");
+    }
   }
 
   async sendFoundItemNotification(userId: string, message: FoundItemMessage): Promise<void> {
@@ -168,15 +225,19 @@ export class TelegramBot {
       const { item } = message;
       const text =
         `🎯 Найден предмет!\n\n` +
+        `🎲 Paint Seed: ${item.paintSeed}${item.paintSeedTier ? ` Tier: ${item.paintSeedTier}` : ""}\n\n` +
         `📦 ${item.name}\n` +
-        `💰 Цена: ${item.price}₽\n` +
+        `💰 Цена: ${item.price}$\n` +
         `🎨 Float: ${item.float}\n` +
-        `🎲 Paint Seed: ${item.paintSeed}\n` +
-        `⭐ Качество: ${item.quality}\n` +
-        `🏪 Площадка: ${message.platform}\n\n` +
-        `🔗 Холд: ${item.unlockAt}`;
+        `${item.quality ? `⭐ Качество: ${item.quality}\n` : ""}` +
+        `🔗 Холд: ${item.unlockAt ? new Date(item.unlockAt).toLocaleString() : "Нет"}\n\n` +
+        `🔗 Платформа ${message.platform}`;
+
+      const keyboard = new InlineKeyboard()
+        .text("🛒 Купить", `buy_${message.buyRequestId}_${message.platform}`);
 
       await this.bot.api.sendMessage(user.telegramId, text, {
+        reply_markup: keyboard,
         // parse_mode: "markdown",
         // disable_web_page_preview: true,
       });
@@ -184,6 +245,48 @@ export class TelegramBot {
       logger.info(`Sent notification to user ${userId}`);
     } catch (error) {
       logger.withError(error).error("Error sending notification");
+    }
+  }
+
+  async sendBuyResponseNotification(message: BuyResponseMessage): Promise<void> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: message.userId },
+      });
+
+      if (!user || !user.telegramId) {
+        logger.warn(`User ${message.userId} has no Telegram ID`);
+        return;
+      }
+
+      const emoji = message.success ? "✅" : "❌";
+      const title = message.success ? "Покупка успешна!" : "Ошибка покупки";
+      const text = `${emoji} ${title}\n\n${message.message}`;
+
+      // If we have original message info, try to edit it
+      if (message.telegramChatId && message.telegramMessageId) {
+        try {
+          await this.bot.api.editMessageText(
+            message.telegramChatId,
+            message.telegramMessageId,
+            text
+          );
+        } catch (editError) {
+          // If edit fails, send new message
+          logger.withContext({ error: editError }).warn("Failed to edit message, sending new one");
+          await this.bot.api.sendMessage(user.telegramId, text);
+        }
+      } else {
+        // Send new message
+        await this.bot.api.sendMessage(user.telegramId, text);
+      }
+
+      logger.withContext({ 
+        userId: message.userId, 
+        success: message.success 
+      }).info("Sent buy response notification");
+    } catch (error) {
+      logger.withError(error).error("Error sending buy response notification");
     }
   }
 

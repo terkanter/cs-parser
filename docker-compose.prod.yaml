@@ -1,0 +1,118 @@
+services:
+  # Database
+  postgres:
+    container_name: cs_parser_postgres_prod
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-backend}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-testing123}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres_prod:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - cs_parser_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-backend}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Message Queue
+  rabbitmq:
+    container_name: cs_parser_rabbitmq_prod
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-testing123}
+    volumes:
+      - rabbitmq_prod:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    networks:
+      - cs_parser_network
+    restart: unless-stopped
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Service
+  api:
+    container_name: cs_parser_api_prod
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-testing123}@postgres:5432/${POSTGRES_DB:-backend}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-testing123}@rabbitmq:5672
+    ports:
+      - "3001:3001"
+    networks:
+      - cs_parser_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Web Application
+  web:
+    container_name: cs_parser_web_prod
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3001
+    ports:
+      - "3000:3000"
+    networks:
+      - cs_parser_network
+    depends_on:
+      - api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Telegram Bot
+  telegram-bot:
+    container_name: cs_parser_telegram_bot_prod
+    build:
+      context: .
+      dockerfile: apps/telegram-bot/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-testing123}@postgres:5432/${POSTGRES_DB:-backend}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-testing123}@rabbitmq:5672
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    networks:
+      - cs_parser_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  cs_parser_network:
+    driver: bridge
+
+volumes:
+  postgres_prod:
+  rabbitmq_prod:

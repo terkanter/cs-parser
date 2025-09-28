@@ -272,19 +272,9 @@ export class LisSkinsService {
         return false;
       }
 
-      const paintSeedMatches = query.paint_seed.some((seedConfig) => {
-        if (seedConfig.value !== undefined) {
-          if (seedConfig.value.includes(item.item_paint_seed!)) {
-            return true;
-          }
-        }
+      const paintSeedMatches = query.paint_seed.some((seedConfig) => item.item_paint_seed === seedConfig.value!);
 
-        return false;
-      });
-
-      if (!paintSeedMatches) {
-        return false;
-      }
+      if (!paintSeedMatches) return false;
     }
 
     return true;
@@ -295,18 +285,14 @@ export class LisSkinsService {
     return qualityMatch ? qualityMatch[1] : "Unknown";
   }
 
-  private getPaintSeedTier(paintSeed: number | null, query: BuyRequestQuery): string | undefined {
+  private getPaintSeedTier(paintSeed: number | null, query: BuyRequestQuery): number | undefined {
     if (paintSeed === null || !query.paint_seed) {
       return undefined;
     }
 
     for (const seedConfig of query.paint_seed) {
-      if (seedConfig.value === undefined) {
-        continue;
-      }
-
-      if (seedConfig.value.includes(paintSeed)) {
-        return seedConfig.name;
+      if (seedConfig.value !== undefined && seedConfig.value === paintSeed) {
+        return seedConfig.tier;
       }
     }
 
@@ -464,6 +450,45 @@ export class LisSkinsService {
     } catch (error) {
       logger.withError(error).error("Failed to get WebSocket token");
       throw error;
+    }
+  }
+
+  async buyItem(buyRequestId: string, userId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      // Get buy request details
+      const buyRequest = await this.buyRequestRepository.findById(buyRequestId);
+      if (!buyRequest) {
+        return { success: false, message: "Заявка на покупку не найдена" };
+      }
+
+      // Get user's LIS-Skins credentials
+      const auth = await this.platformAccountRepository.findLisSkinsAccountByUserId(userId);
+      if (!auth) {
+        return { success: false, message: "Не найдена авторизация для LIS-Skins" };
+      }
+
+      const apiKey = (auth.credentials as { apiKey: string }).apiKey;
+
+      // TODO: Implement actual purchase logic
+      // This would involve calling LIS-Skins API to purchase the item
+      // For now, we'll simulate the purchase
+      
+      logger.withContext({ buyRequestId, userId }).info("Simulating item purchase");
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate success (in real implementation, this would be based on API response)
+      const success = Math.random() > 0.3; // 70% success rate for simulation
+      
+      if (success) {
+        return { success: true, message: "Предмет успешно куплен!" };
+      } else {
+        return { success: false, message: "Не удалось купить предмет. Возможно, он уже продан." };
+      }
+    } catch (error) {
+      logger.withError(error).error("Error buying item");
+      return { success: false, message: "Произошла ошибка при покупке" };
     }
   }
 }

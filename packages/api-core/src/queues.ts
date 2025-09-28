@@ -4,18 +4,23 @@ export const QUEUES = {
   TELEGRAM_NOTIFICATIONS: "telegram.notifications",
   PARSER_REQUESTS: "parser.requests",
   ITEM_FOUND: "item.found",
+  BUY_REQUESTS: "buy.requests",
+  BUY_RESPONSES: "buy.responses",
 } as const;
 
 export const EXCHANGES = {
   NOTIFICATIONS: "notifications",
   PARSER: "parser",
   ITEMS_FOUND: "items.found", // Legacy exchange name for backwards compatibility
+  BUY_REQUESTS: "buy.requests",
 } as const;
 
 export const ROUTING_KEYS = {
   TELEGRAM_NOTIFY: "telegram.notify",
   ITEM_FOUND: "item.found",
   PARSE_REQUEST: "parse.request",
+  BUY_REQUEST: "buy.request",
+  BUY_RESPONSE: "buy.response",
 } as const;
 
 // Topic names for different message types
@@ -39,10 +44,27 @@ export interface FoundItemMessage {
     paintSeed: number;
     paintSeedTier?: number;
     quality: string;
-    url: string;
-    imageUrl?: string;
+    unlockAt: string | null;
   };
   foundAt: Date;
+}
+
+export interface BuyRequestMessage {
+  buyRequestId: string;
+  userId: string;
+  platform: string;
+  telegramMessageId?: number;
+  telegramChatId?: string;
+}
+
+export interface BuyResponseMessage {
+  buyRequestId: string;
+  userId: string;
+  platform: string;
+  success: boolean;
+  message: string;
+  telegramMessageId?: number;
+  telegramChatId?: string;
 }
 
 // Type exports for type safety

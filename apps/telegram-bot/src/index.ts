@@ -3,6 +3,7 @@ import { env } from "./env";
 import { connectDatabase, disconnectDatabase } from "./services/database";
 import { notificationService } from "./services/notification.service";
 import { rabbitmqConsumer } from "./services/rabbitmq";
+import { rabbitmqProducer } from "./services/rabbitmq-producer";
 import { logger } from "./utils/logger";
 
 async function main() {
@@ -11,6 +12,7 @@ async function main() {
   try {
     await connectDatabase();
     await rabbitmqConsumer.connect();
+    await rabbitmqProducer.connect();
 
     telegramBot.start();
 
@@ -32,6 +34,7 @@ async function shutdown() {
   try {
     await telegramBot.stop();
     await rabbitmqConsumer.close();
+    await rabbitmqProducer.close();
     await disconnectDatabase();
 
     logger.withContext({ environment: env.NODE_ENV }).info("Telegram Bot Service shut down gracefully");

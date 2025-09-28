@@ -69,7 +69,7 @@ export const appConfig = {
     basePath: env.VITE_ADMIN_BASE_PATH,
   },
   flags: {
-    useFakeData: env.VITE_ENABLE_FAKE_DATA === "true",
+    useFakeData: false,
   },
   observability: {
     sentryDsn: env.VITE_SENTRY_DSN,

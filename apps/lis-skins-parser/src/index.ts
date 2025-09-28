@@ -1,3 +1,4 @@
+import { buyHandlerService } from "./services/buy-handler.service";
 import { connectDatabase, disconnectDatabase } from "./services/database";
 import { lisSkinsService } from "./services/lis-skins.service";
 import { rabbitmqService } from "./services/rabbitmq";
@@ -11,8 +12,9 @@ async function main() {
     await connectDatabase();
     await rabbitmqService.connect();
 
-    // Start LIS-Skins service
+    // Start services
     await lisSkinsService.start();
+    await buyHandlerService.startListening();
 
     logger.info("LIS Skins Parser started successfully");
 
