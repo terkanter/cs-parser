@@ -28,6 +28,9 @@ COPY --from=pruner /app/out/full/ .
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Generate prisma client
+RUN pnpm run --filter @repo/prisma... db:generate
+
 # Build the application
 ENV CI true
 RUN pnpm run --filter @repo/lis-skins-parser... build
