@@ -24,6 +24,7 @@ async function build() {
           allowList: ["@repo/prisma", "@repo/api-errors", "@repo/api-core"],
         }),
       ],
+      external: ["@dotenvx/dotenvx"],
       metafile: true,
       outbase: "src",
     });
