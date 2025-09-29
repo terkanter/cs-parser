@@ -31,7 +31,9 @@ export async function registerBuyRequestListRoute(fastify: FastifyInstance) {
 
       const { take, skip } = getPaginationParams({ page, perPage });
 
-      const where: any = {};
+      const where: any = {
+        createdByUserId: request.ctx.requireUserId,
+      };
       if (platform) where.platform = platform;
       if (isActive !== undefined) where.isActive = isActive;
 
