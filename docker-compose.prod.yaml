@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_prod:/data/postgres
     ports:
-      - "5432:5432"
+      - "54333:5432"
     networks:
       - cs_parser_network
     restart: unless-stopped
@@ -50,8 +50,13 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       - NODE_ENV=production
+      - SERVER_PORT=3001
+      - BACKEND_LOG_LEVEL=info
       - DATABASE_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-testing123}@postgres:5432/${POSTGRES_DB:-backend}
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-testing123}@rabbitmq:5672
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change-this-secret-in-production-it-must-be-at-least-32-characters-long}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://185.198.165.28:3001}
+      - FRONTEND_URL=${FRONTEND_URL:-http://185.198.165.28:3000}
+      - IS_GENERATING_CLIENT=false
     ports:
       - "3001:3001"
     networks:
@@ -75,7 +80,9 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        - VITE_API_URL=http://localhost:3001
+        - VITE_API_URL=${VITE_API_URL:-http://185.198.165.28:3001}
+    environment:
+      - NODE_ENV=production
     ports:
       - "3000:3000"
     networks:
@@ -100,6 +107,24 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-testing123}@postgres:5432/${POSTGRES_DB:-backend}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-testing123}@rabbitmq:5672
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    networks:
+      - cs_parser_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  lis-skins-parser:
+    container_name: cs_parser_lis_skins_parser_prod
+    build:
+      context: .
+      dockerfile: apps/lis-skins-parser/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-testing123}@postgres:5432/${POSTGRES_DB:-backend}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD:-testing123}@rabbitmq:5672
     networks:
       - cs_parser_network
     depends_on:
