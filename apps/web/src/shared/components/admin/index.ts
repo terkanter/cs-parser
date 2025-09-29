@@ -57,6 +57,7 @@ export * from "./select-input";
 export * from "./show";
 export * from "./show-button";
 export * from "./show-guesser";
+export * from "./signup-page";
 export * from "./simple-form";
 export * from "./simple-form-iterator";
 export * from "./simple-show-layout";

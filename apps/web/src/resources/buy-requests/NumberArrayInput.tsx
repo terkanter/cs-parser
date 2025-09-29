@@ -1,6 +1,6 @@
 import { FormControl, FormError, FormField, FormLabel } from "@/shared/components/admin/form";
 import { InputHelperText } from "@/shared/components/admin/input-helper-text";
-import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { FieldTitle, type InputProps, useInput, useResourceContext } from "ra-core";
 import { useState } from "react";
 
@@ -52,7 +52,7 @@ export const NumberArrayInput = (props: NumberArrayInputProps) => {
 
   const [displayValue, setDisplayValue] = useState<string>(() => formatNumberArray(field.value));
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.target.value;
 
     setDisplayValue(value);
@@ -67,7 +67,7 @@ export const NumberArrayInput = (props: NumberArrayInputProps) => {
         </FormLabel>
       )}
       <FormControl>
-        <Input
+        <Textarea
           {...rest}
           id={id}
           value={displayValue}
