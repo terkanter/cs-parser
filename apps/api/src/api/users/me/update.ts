@@ -1,3 +1,4 @@
+import { updateUserBodySchema } from "@/schemas/user";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
@@ -9,20 +10,23 @@ export async function registerUserUpdateMeRoute(fastify: FastifyInstance) {
         description: "Update current user profile",
         tags: ["users"],
         operationId: "updateUserProfile",
+        body: updateUserBodySchema,
       },
     },
     async (request, reply) => {
       try {
         const { user } = request.ctx.requireAuth();
 
-        const { telegramId } = request.body as {
+        const { telegramId, steamTradeUrl } = request.body as {
           telegramId: string | null;
+          steamTradeUrl: string | null;
         };
 
         const updatedUser = await request.ctx.prisma.user.update({
           where: { id: user!.id },
           data: {
             ...(telegramId !== undefined && { telegramId }),
+            ...(steamTradeUrl !== undefined && { steamTradeUrl }),
           },
           select: {
             id: true,
@@ -33,6 +37,7 @@ export async function registerUserUpdateMeRoute(fastify: FastifyInstance) {
             emailVerified: true,
             createdAt: true,
             updatedAt: true,
+            steamTradeUrl: true,
           },
         });
 

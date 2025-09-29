@@ -25,6 +25,7 @@ export async function registerUserGetMeRoute(fastify: FastifyInstance) {
             emailVerified: true,
             createdAt: true,
             updatedAt: true,
+            steamTradeUrl: true,
           },
         });
 
@@ -35,11 +36,7 @@ export async function registerUserGetMeRoute(fastify: FastifyInstance) {
           });
         }
 
-        return reply.status(200).send({
-          ...userData,
-          createdAt: userData.createdAt.toISOString(),
-          updatedAt: userData.updatedAt.toISOString(),
-        });
+        return reply.status(200).send(userData);
       } catch (error) {
         request.log.error("Error getting user profile:", error);
         return reply.status(500).send({

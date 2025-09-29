@@ -35,11 +35,8 @@ export const PersonalSettingsCard = () => {
         </div>
       }
     >
-      <TextInput
-        source="telegramId"
-        label="Telegram Chat ID"
-        helperText="Your Telegram Chat ID for notifications (get it from @userinfobot)"
-      />
+      <TextInput source="telegramId" label="Telegram Chat ID" helperText="Your Telegram Chat ID for notifications" />
+      <TextInput source="steamTradeUrl" label="Steam Trade URL" helperText="Your Steam Trade URL" />
     </SimpleForm>
   );
 };

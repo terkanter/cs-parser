@@ -15,9 +15,8 @@ export const userSchema = z.object({
 
 // Update user schema for PUT /users/me
 export const updateUserBodySchema = z.object({
-  name: z.string().optional(),
   telegramId: z.string().nullable().optional(),
-  liskinsApiKey: z.string().nullable().optional(),
+  steamTradeUrl: z.string().nullable().optional(),
 });
 
 // Error response schemas
