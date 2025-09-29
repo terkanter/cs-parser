@@ -53,7 +53,7 @@ export async function startServer({ port }: { port: number }) {
   fastify.register(routes);
   fastify.log.disableLogging();
 
-  fastify.listen({ port }, (err, address) => {
+  fastify.listen({ port, host: '0.0.0.0' }, (err, address) => {
     if (err) {
       fastify.log.error(err);
       process.exit(1);
