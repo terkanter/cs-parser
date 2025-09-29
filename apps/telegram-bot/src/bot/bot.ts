@@ -166,14 +166,14 @@ export class TelegramBot {
 
   private async handleBuyRequest(ctx: any, callbackData: string): Promise<void> {
     try {
-      // Parse callback data: "buy_{buyRequestId}_{platform}"
+      // Parse callback data: "buy_{buyRequestId}_{platform}_{id}"
       const parts = callbackData.split("_");
-      if (parts.length !== 3) {
+      if (parts.length !== 4) {
         await ctx.answerCallbackQuery("❌ Некорректные данные");
         return;
       }
 
-      const [, buyRequestId, platform] = parts;
+      const [, buyRequestId, platform, id] = parts;
       const telegramId = ctx.from?.id.toString();
       
       if (!telegramId) {
@@ -196,6 +196,7 @@ export class TelegramBot {
         buyRequestId,
         userId: user.id,
         platform,
+        id,
         telegramMessageId: ctx.callbackQuery.message?.message_id,
         telegramChatId: ctx.callbackQuery.message?.chat.id.toString(),
       });
@@ -234,7 +235,7 @@ export class TelegramBot {
         `🔗 Платформа ${message.platform}`;
 
       const keyboard = new InlineKeyboard()
-        .text("🛒 Купить", `buy_${message.buyRequestId}_${message.platform}`);
+        .text("🛒 Купить", `buy_${message.buyRequestId}_${message.platform}_${message.item.id}`);
 
       await this.bot.api.sendMessage(user.telegramId, text, {
         reply_markup: keyboard,

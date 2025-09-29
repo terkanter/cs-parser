@@ -18,7 +18,7 @@ class BuyHandlerService {
       }).info("Processing buy request");
 
       // Execute the purchase
-      const result = await lisSkinsService.buyItem(message.buyRequestId, message.userId);
+      const result = await lisSkinsService.buyItem(message.userId, message.id, message.price);
 
       // Send response back
       await rabbitmqService.publishBuyResponse({
@@ -57,3 +57,4 @@ class BuyHandlerService {
 }
 
 export const buyHandlerService = new BuyHandlerService();
+

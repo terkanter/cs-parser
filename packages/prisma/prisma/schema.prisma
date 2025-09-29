@@ -32,6 +32,7 @@ model User {
   accounts      Account[]
 
   telegramId String?
+  steamTradeUrl String?
 
   buyRequests      BuyRequest[]
   platformAccounts PlatformAccount[]

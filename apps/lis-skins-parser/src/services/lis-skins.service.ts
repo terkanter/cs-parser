@@ -5,6 +5,7 @@ import { BuyRequestRepository, PlatformAccountRepository } from "../repositories
 import { logger } from "../utils/logger";
 import { rabbitmqService } from "./rabbitmq";
 import { type WebSocketConnectionConfig, websocketManager } from "./websocket-manager";
+import { UserRepository } from "../repositories/user.repository";
 
 interface LisSkinsWebSocketItem {
   id: number;
@@ -39,6 +40,7 @@ export class LisSkinsService {
   constructor(
     private buyRequestRepository: BuyRequestRepository,
     private platformAccountRepository: PlatformAccountRepository,
+    private userRepository: UserRepository,
   ) {}
 
   async addBuyRequest(buyRequest: BuyRequest): Promise<void> {
@@ -171,6 +173,7 @@ export class LisSkinsService {
           const paintSeedTier = this.getPaintSeedTier(item.item_paint_seed, query);
 
           const foundItem = {
+            id: item.id,
             name: item.name,
             price: item.price,
             float: Number.parseFloat(item.item_float),
@@ -248,7 +251,7 @@ export class LisSkinsService {
       return false;
     }
 
-    if (query.float) {
+    if (query.float && item.item_float) {
       const itemFloat = Number.parseFloat(item.item_float);
       if (query.float.gte !== undefined && itemFloat < query.float.gte) {
         return false;
@@ -258,7 +261,7 @@ export class LisSkinsService {
       }
     }
 
-    if (query.price) {
+    if (query.price && item.price) {
       if (query.price.gte !== undefined && item.price < query.price.gte) {
         return false;
       }
@@ -453,14 +456,8 @@ export class LisSkinsService {
     }
   }
 
-  async buyItem(buyRequestId: string, userId: string): Promise<{ success: boolean; message: string }> {
+  async buyItem(userId: string, id: number, price: number): Promise<{ success: boolean; message: string }> {
     try {
-      // Get buy request details
-      const buyRequest = await this.buyRequestRepository.findById(buyRequestId);
-      if (!buyRequest) {
-        return { success: false, message: "Заявка на покупку не найдена" };
-      }
-
       // Get user's LIS-Skins credentials
       const auth = await this.platformAccountRepository.findLisSkinsAccountByUserId(userId);
       if (!auth) {
@@ -469,23 +466,52 @@ export class LisSkinsService {
 
       const apiKey = (auth.credentials as { apiKey: string }).apiKey;
 
-      // TODO: Implement actual purchase logic
-      // This would involve calling LIS-Skins API to purchase the item
-      // For now, we'll simulate the purchase
-      
-      logger.withContext({ buyRequestId, userId }).info("Simulating item purchase");
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate success (in real implementation, this would be based on API response)
-      const success = Math.random() > 0.3; // 70% success rate for simulation
-      
-      if (success) {
-        return { success: true, message: "Предмет успешно куплен!" };
-      } else {
-        return { success: false, message: "Не удалось купить предмет. Возможно, он уже продан." };
+      const response = await fetch(`${LIS_SKINS_API_URL}user/balance`, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      })
+
+      const json = (await response.json()) as { data: { balance: number } };
+
+      const balance = json.data.balance;
+
+      if (balance < price) {
+        return { success: false, message: "Недостаточно средств на балансе" };
       }
+
+      const user = await this.userRepository.getUserById(userId);
+
+      if (!user) {
+        return { success: false, message: "Не найден пользователь" };
+       }
+
+       if (!user.steamTradeUrl) {
+        return { success: false, message: "Не найден Steam Trade URL" };
+       }
+
+       const url = new URL(user.steamTradeUrl)
+       const partner = url.searchParams.get('partner');
+       const token = url.searchParams.get('token');
+
+      const buyResponse = await fetch(`${LIS_SKINS_API_URL}market/buy`, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        method: "POST",
+        body: JSON.stringify({
+          ids: [id],
+          partner,
+          token
+        }),
+      })
+
+      const buyText = await buyResponse.text();
+      if (!buyResponse.ok) {
+        return { success: false, message: `Не удалось купить предмет: ${buyText}` };
+      }
+      
+      return { success: true, message: "Предмет успешно куплен!" };
     } catch (error) {
       logger.withError(error).error("Error buying item");
       return { success: false, message: "Произошла ошибка при покупке" };
@@ -495,5 +521,6 @@ export class LisSkinsService {
 
 const buyRequestRepository = new BuyRequestRepository();
 const platformAccountRepository = new PlatformAccountRepository();
+const userRepository = new UserRepository();
 
-export const lisSkinsService = new LisSkinsService(buyRequestRepository, platformAccountRepository);
+export const lisSkinsService = new LisSkinsService(buyRequestRepository, platformAccountRepository, userRepository);

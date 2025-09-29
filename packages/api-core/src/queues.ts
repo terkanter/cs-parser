@@ -38,6 +38,7 @@ export interface FoundItemMessage {
   userId: string;
   platform: string;
   item: {
+    id: number;
     name: string;
     price: number;
     float: number;
@@ -50,7 +51,9 @@ export interface FoundItemMessage {
 }
 
 export interface BuyRequestMessage {
+  id: number;
   buyRequestId: string;
+  price: number;
   userId: string;
   platform: string;
   telegramMessageId?: number;
