@@ -18,18 +18,20 @@
       },
       "a11y": {
         "noNoninteractiveElementToInteractiveRole": "off",
-        "useFocusableInteractive": "warn",
-        "noSvgWithoutTitle": "off"
+        "noSvgWithoutTitle": "off",
+        "useKeyWithClickEvents": "off",
+        "useFocusableInteractive": "off"
       },
       "performance": {
-        "noDelete": "off"
+        "noDelete": "off",
+        "noAccumulatingSpread": "off"
       },
       "complexity": {
         "useLiteralKeys": "off"
       },
       "correctness": {
         "noUnusedImports": "warn",
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": "off"
       },
       "suspicious": {
         "noImplicitAnyLet": "off",

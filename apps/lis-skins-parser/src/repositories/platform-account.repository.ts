@@ -1,4 +1,4 @@
-import { type PlatformAccount, prisma, Platform } from "@repo/prisma";
+import { Platform, type PlatformAccount, prisma } from "@repo/prisma";
 
 export class PlatformAccountRepository {
   async findLisSkinsAccountByUserId(userId: string): Promise<PlatformAccount | null> {

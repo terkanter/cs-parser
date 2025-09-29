@@ -1,15 +1,15 @@
+import set from "lodash/set";
+import { type Identifier, type OptionText, useTranslate } from "ra-core";
 import type * as React from "react";
 import {
   type ChangeEvent,
+  type ReactElement,
   createContext,
   isValidElement,
-  type ReactElement,
   useContext,
   useRef,
   useState,
 } from "react";
-import { type Identifier, type OptionText, useTranslate } from "ra-core";
-import set from "lodash/set";
 
 /**
  * This hook provides support for suggestion creation in inputs which have choices.

@@ -207,7 +207,7 @@ export const FilterButton = (props: FilterButtonProps) => {
       }, 50);
       setOpen(false);
     },
-    [showFilter, setOpen],
+    [showFilter],
   );
 
   const handleRemove = useCallback(
@@ -263,7 +263,7 @@ export const FilterButton = (props: FilterButtonProps) => {
             />
           ))}
           {(hasFilterValues || validSavedQueries.length > 0) && <DropdownMenuSeparator />}
-          {validSavedQueries.map((savedQuery: SavedQuery, index: number) =>
+          {validSavedQueries.map((savedQuery: SavedQuery) =>
             isEqual(savedQuery.value, {
               filter: filterValues,
               sort,
@@ -358,7 +358,6 @@ export const FilterButtonMenuItem = React.forwardRef<HTMLDivElement, FilterButto
 
   return (
     <div
-      type="button"
       className={cn(
         "new-filter-item flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm",
         filter.props.disabled && "opacity-50 cursor-not-allowed",

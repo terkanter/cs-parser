@@ -271,15 +271,14 @@ export const SimpleFormIteratorItem = React.forwardRef(
             //   </SimpleFormIterator>
             // </ArrayInput>
             return parentSourceContext.getSource(`${index}`);
-          } else {
-            // Normal input with source, e.g.
-            // <ArrayInput source="orders" /> => SourceContext is "orders"
-            //   <SimpleFormIterator> => SourceContext is "orders.0"
-            //      <DateInput source="date" /> => use its parent's getSource so finalSource = "orders.0.date"
-            //   </SimpleFormIterator>
-            // </ArrayInput>
-            return parentSourceContext.getSource(`${index}.${source}`);
           }
+          // Normal input with source, e.g.
+          // <ArrayInput source="orders" /> => SourceContext is "orders"
+          //   <SimpleFormIterator> => SourceContext is "orders.0"
+          //      <DateInput source="date" /> => use its parent's getSource so finalSource = "orders.0.date"
+          //   </SimpleFormIterator>
+          // </ArrayInput>
+          return parentSourceContext.getSource(`${index}.${source}`);
         },
         getLabel: (source: string) => {
           // <ArrayInput source="orders" /> => LabelContext is "orders"

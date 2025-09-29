@@ -1,4 +1,4 @@
-import { ScanFace, BookOpenText, ChevronsLeftRight, Github } from "lucide-react";
+import { BookOpenText, ChevronsLeftRight, Github, ScanFace } from "lucide-react";
 
 export const Ready = () => (
   <div className="flex flex-col h-screen">

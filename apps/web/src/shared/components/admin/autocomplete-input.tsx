@@ -107,17 +107,7 @@ export const AutocompleteInput = (
       field.onChange(getChoiceValue(choice));
       setOpen(false);
     },
-    [
-      field.value,
-      field.onChange,
-      getChoiceValue,
-      isRequired,
-      setFilterValue,
-      isFromReference,
-      setFilters,
-      filterToQuery,
-      setOpen,
-    ],
+    [field.value, getChoiceValue, isRequired, isFromReference, filterToQuery],
   );
 
   const {

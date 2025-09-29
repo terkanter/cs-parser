@@ -1,4 +1,11 @@
-import { EXCHANGES, QUEUES, ROUTING_KEYS, type FoundItemMessage, type BuyRequestMessage, type BuyResponseMessage } from "@repo/api-core";
+import {
+  type BuyRequestMessage,
+  type BuyResponseMessage,
+  EXCHANGES,
+  type FoundItemMessage,
+  QUEUES,
+  ROUTING_KEYS,
+} from "@repo/api-core";
 import amqp from "amqplib";
 import { env } from "../env";
 import { logger } from "../utils/logger";
@@ -15,7 +22,7 @@ class RabbitMQService {
       // Declare exchanges and queues
       await this.channel.assertExchange(EXCHANGES.ITEMS_FOUND, "direct", { durable: true });
       await this.channel.assertExchange(EXCHANGES.BUY_REQUESTS, "direct", { durable: true });
-      
+
       await this.channel.assertQueue(QUEUES.TELEGRAM_NOTIFICATIONS, { durable: true });
       await this.channel.assertQueue(QUEUES.BUY_REQUESTS, { durable: true });
       await this.channel.assertQueue(QUEUES.BUY_RESPONSES, { durable: true });

@@ -1,4 +1,6 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
+  type ExtractRecordPaths,
   type LinkToType,
   type RaRecord,
   ReferenceFieldBase,
@@ -7,11 +9,9 @@ import {
   useGetRecordRepresentation,
   useReferenceFieldContext,
   useTranslate,
-  type ExtractRecordPaths,
 } from "ra-core";
 import type { MouseEvent, ReactNode } from "react";
 import { Link } from "react-router";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 export const ReferenceField = <RecordType extends RaRecord = RaRecord, ReferenceRecordType extends RaRecord = RaRecord>(
   props: ReferenceFieldProps<RecordType, ReferenceRecordType>,

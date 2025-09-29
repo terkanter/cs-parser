@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
 import {
-  ReferenceManyFieldBase,
-  useListContext,
-  type RaRecord,
-  type UseReferenceManyFieldControllerParams,
   type ListControllerResult,
+  type RaRecord,
+  ReferenceManyFieldBase,
+  type UseReferenceManyFieldControllerParams,
+  useListContext,
 } from "ra-core";
+import type { ReactNode } from "react";
 
 export const ReferenceManyField = <
   RecordType extends RaRecord = RaRecord,
@@ -65,7 +65,7 @@ const ReferenceManyFieldView = <ReferenceRecordType extends RaRecord = RaRecord>
 
   return (
     <>
-      {render && render(listContext)}
+      {render?.(listContext)}
       {children}
       {pagination}
     </>

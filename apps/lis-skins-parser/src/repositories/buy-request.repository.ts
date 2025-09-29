@@ -1,4 +1,4 @@
-import { type BuyRequest, prisma, Platform } from "@repo/prisma";
+import { type BuyRequest, prisma } from "@repo/prisma";
 
 export class BuyRequestRepository {
   async findActiveLisSkinsBuyRequests(): Promise<BuyRequest[]> {

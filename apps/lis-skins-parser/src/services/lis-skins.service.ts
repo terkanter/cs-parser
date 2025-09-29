@@ -2,10 +2,10 @@ import type { BuyRequestQuery } from "@repo/api-core";
 import { type BuyRequest, Platform } from "@repo/prisma";
 import { LIS_SKINS_API_URL, LIS_SKINS_WEBSOCKET_URL } from "../consts";
 import { BuyRequestRepository, PlatformAccountRepository } from "../repositories";
+import { UserRepository } from "../repositories/user.repository";
 import { logger } from "../utils/logger";
 import { rabbitmqService } from "./rabbitmq";
 import { type WebSocketConnectionConfig, websocketManager } from "./websocket-manager";
-import { UserRepository } from "../repositories/user.repository";
 
 interface LisSkinsWebSocketItem {
   id: number;
@@ -470,7 +470,7 @@ export class LisSkinsService {
         headers: {
           Authorization: `Bearer ${apiKey}`,
         },
-      })
+      });
 
       const json = (await response.json()) as { data: { balance: number } };
 
@@ -484,15 +484,15 @@ export class LisSkinsService {
 
       if (!user) {
         return { success: false, message: "Не найден пользователь" };
-       }
+      }
 
-       if (!user.steamTradeUrl) {
+      if (!user.steamTradeUrl) {
         return { success: false, message: "Не найден Steam Trade URL" };
-       }
+      }
 
-       const url = new URL(user.steamTradeUrl)
-       const partner = url.searchParams.get('partner');
-       const token = url.searchParams.get('token');
+      const url = new URL(user.steamTradeUrl);
+      const partner = url.searchParams.get("partner");
+      const token = url.searchParams.get("token");
 
       const buyResponse = await fetch(`${LIS_SKINS_API_URL}market/buy`, {
         headers: {
@@ -502,15 +502,15 @@ export class LisSkinsService {
         body: JSON.stringify({
           ids: [id],
           partner,
-          token
+          token,
         }),
-      })
+      });
 
       const buyText = await buyResponse.text();
       if (!buyResponse.ok) {
         return { success: false, message: `Не удалось купить предмет: ${buyText}` };
       }
-      
+
       return { success: true, message: "Предмет успешно куплен!" };
     } catch (error) {
       logger.withError(error).error("Error buying item");

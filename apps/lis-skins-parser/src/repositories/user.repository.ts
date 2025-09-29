@@ -1,4 +1,4 @@
-import { prisma, type User } from "@repo/prisma";
+import { type User, prisma } from "@repo/prisma";
 
 export class UserRepository {
   async getUserById(id: string): Promise<User | null> {

@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
 import {
   ListContextProvider,
-  useList,
-  useFieldValue,
   type RaRecord,
-  type UseListOptions,
   type UseFieldValueOptions,
+  type UseListOptions,
+  useFieldValue,
+  useList,
 } from "ra-core";
+import type { ReactNode } from "react";
 
 export const ArrayField = <RecordType extends RaRecord = RaRecord>(props: ArrayFieldProps<RecordType>) => {
   const { children, resource, perPage, sort, filter } = props;

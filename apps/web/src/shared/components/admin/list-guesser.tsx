@@ -66,7 +66,7 @@ const ListViewGuesser = (props: Omit<ListViewProps, "children"> & { enableLog?: 
   const { data } = useListContext();
   const resource = useResourceContext();
   const [child, setChild] = useState<React.ReactElement | null>(null);
-  const { enableLog = process.env.NODE_ENV === "development", ...rest } = props;
+  const { enableLog = import.meta.env.DEV, ...rest } = props;
 
   useEffect(() => {
     setChild(null);

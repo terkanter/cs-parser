@@ -11,11 +11,13 @@ class BuyHandlerService {
 
   private async handleBuyRequest(message: BuyRequestMessage): Promise<void> {
     try {
-      logger.withContext({ 
-        buyRequestId: message.buyRequestId, 
-        userId: message.userId, 
-        platform: message.platform 
-      }).info("Processing buy request");
+      logger
+        .withContext({
+          buyRequestId: message.buyRequestId,
+          userId: message.userId,
+          platform: message.platform,
+        })
+        .info("Processing buy request");
 
       // Execute the purchase
       const result = await lisSkinsService.buyItem(message.userId, message.id, message.price);
@@ -31,13 +33,15 @@ class BuyHandlerService {
         telegramChatId: message.telegramChatId,
       });
 
-      logger.withContext({ 
-        buyRequestId: message.buyRequestId, 
-        success: result.success 
-      }).info("Processed buy request and sent response");
+      logger
+        .withContext({
+          buyRequestId: message.buyRequestId,
+          success: result.success,
+        })
+        .info("Processed buy request and sent response");
     } catch (error) {
       logger.withError(error).error("Error handling buy request");
-      
+
       // Send error response
       try {
         await rabbitmqService.publishBuyResponse({
@@ -57,4 +61,3 @@ class BuyHandlerService {
 }
 
 export const buyHandlerService = new BuyHandlerService();
-
