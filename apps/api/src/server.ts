@@ -24,7 +24,7 @@ export async function startServer({ port }: { port: number }) {
 
   // Register CORS directly as THE FIRST PLUGIN
   await fastify.register(fastifyCors, {
-    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000", 'http://185.198.165.28:3000'],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allowedHeaders: [
       "Origin",
