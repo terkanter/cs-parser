@@ -47,6 +47,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy only the necessary built files and node_modules
 COPY --from=builder --chown=1001:1001 /app/apps/api/dist ./
+COPY --from=builder --chown=1001:1001 /app/apps/api/node_modules ./node_modules
 COPY --from=builder --chown=1001:1001 /app/node_modules ./node_modules
 COPY --from=builder --chown=1001:1001 /app/packages ./packages
 
