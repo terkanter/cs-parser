@@ -68,10 +68,8 @@ export const authProvider: AuthProvider = {
 
   getPermissions: async () => {
     try {
-      const session = await authClient.getSession();
-
       // Extract permissions from user or session
-      const permissions = session.data?.user?.role || "user";
+      const permissions = "user";
 
       return Promise.resolve(permissions);
     } catch (error) {
@@ -96,7 +94,6 @@ export const authProvider: AuthProvider = {
         fullName: user.name || "Anonymous",
         avatar: user.image || "",
         email: user.email,
-        role: user.role || "user",
       };
 
       return Promise.resolve(identity);
