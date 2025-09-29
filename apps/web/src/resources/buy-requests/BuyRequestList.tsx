@@ -41,7 +41,7 @@ const ItemColumn = ({ record }: { record?: any }) => {
   return record.query.item;
 };
 
-const BooleanColumn = ({ record, ...rest }: { record?: any }) => {
+const BooleanColumn = ({ record }: { record?: any }) => {
   if (!record || record.isActive === undefined) return null;
 
   return <Badge variant={record.isActive ? "secondary" : "destructive"}>{record.isActive ? "Yes" : "No"}</Badge>;

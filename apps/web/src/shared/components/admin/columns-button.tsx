@@ -163,6 +163,7 @@ export const ColumnsSelector = ({ children }: ColumnsSelectorProps) => {
             <Search className="absolute right-2 top-2 h-4 w-4 text-muted-foreground" />
             {columnFilter && (
               <button
+                type="button"
                 onClick={() => setColumnFilter("")}
                 className="absolute right-8 top-2 h-4 w-4 text-muted-foreground"
                 aria-label="Clear"
@@ -227,8 +228,8 @@ export const ColumnsSelectorItem = <RecordType extends RaRecord<Identifier> = Ra
       : Math.max(Number(index1), Number(index2 || 0)) > columnRanks.length - 1
         ? padRanks(columnRanks, Math.max(Number(index1), Number(index2 || 0)) + 1)
         : columnRanks;
-    const index1Pos = colRanks.findIndex((index) => index == Number(index1));
-    const index2Pos = colRanks.findIndex((index) => index == Number(index2));
+    const index1Pos = colRanks.findIndex((index) => index === Number(index1));
+    const index2Pos = colRanks.findIndex((index) => index === Number(index2));
     if (index1Pos === -1 || index2Pos === -1) {
       return;
     }

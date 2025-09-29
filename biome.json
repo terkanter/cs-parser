@@ -34,7 +34,8 @@
       "suspicious": {
         "noImplicitAnyLet": "off",
         "noExplicitAny": "off",
-        "noShadowRestrictedNames": "off"
+        "noShadowRestrictedNames": "off",
+        "noArrayIndexKey": "off"
       },
       "recommended": true
     }
