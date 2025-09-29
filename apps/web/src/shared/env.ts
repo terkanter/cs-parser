@@ -9,8 +9,6 @@ export const env = createEnv({
   client: {
     // API base URL (Backend HTTP server)
     VITE_API_URL: z.string().url().default("http://localhost:3080"),
-    // Auth base URL (Better Auth handler). If not set, fallback to VITE_API_URL
-    VITE_AUTH_URL: z.string().url().optional(),
     // Admin base path (mount point of the Admin UI)
     VITE_ADMIN_BASE_PATH: z.string().default("/"),
     // Feature flags / toggles
@@ -63,7 +61,6 @@ export const env = createEnv({
 export const appConfig = {
   api: {
     url: env.VITE_API_URL,
-    authUrl: env.VITE_AUTH_URL ?? env.VITE_API_URL,
   },
   admin: {
     basePath: env.VITE_ADMIN_BASE_PATH,
