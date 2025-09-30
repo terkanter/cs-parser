@@ -25,31 +25,33 @@ COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=pruner /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=pruner /app/out/full/ .
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Generate prisma client
-RUN pnpm run --filter @repo/prisma... db:generate
+# Install dependencies and generate Prisma client
+RUN pnpm install --frozen-lockfile && \
+    pnpm run --filter @repo/prisma... db:generate
 
 # Build the application
-ENV CI true
 RUN pnpm run --filter @repo/telegram-bot... build
 
 # Runner stage - production environment
 FROM node:22-alpine AS runner
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nodejs
 
-# Copy only the necessary built files and node_modules
-COPY --from=builder --chown=1001:1001 /app/apps/telegram-bot/dist ./
-COPY --from=builder --chown=1001:1001 /app/node_modules ./node_modules
-COPY --from=builder --chown=1001:1001 /app/packages ./packages
+# Copy only the necessary built files and dependencies
+COPY --from=builder --chown=1001:1001 /app/apps/telegram-bot/dist/ ./apps/telegram-bot/dist/
+COPY --from=builder --chown=1001:1001 /app/packages/prisma/prisma/ ./packages/prisma/prisma/
+COPY --from=builder --chown=1001:1001 /app/packages/prisma/generated/client/ ./packages/prisma/generated/client/
+COPY --from=builder --chown=1001:1001 /app/packages/api-core/dist/ ./packages/api-core/dist/
+COPY --from=builder --chown=1001:1001 /app/packages/api-errors/dist/ ./packages/api-errors/dist/
+COPY --from=builder --chown=1001:1001 /app/node_modules/ ./node_modules/
+COPY --from=builder --chown=1001:1001 /app/apps/telegram-bot/node_modules/ ./apps/telegram-bot/node_modules/
+COPY --from=builder --chown=1001:1001 /app/packages/prisma/node_modules/ ./packages/prisma/node_modules/
 
 USER nodejs
 
-CMD ["node", "index.js"]
+CMD ["node", "./apps/telegram-bot/dist/index.js"]
