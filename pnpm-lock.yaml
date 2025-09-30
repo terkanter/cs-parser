@@ -293,6 +293,12 @@ importers:
       '@types/node':
         specifier: ^20.8.0
         version: 20.19.17
+      esbuild:
+        specifier: ^0.25.10
+        version: 0.25.10
+      esbuild-node-externals:
+        specifier: ^1.18.0
+        version: 1.18.0(esbuild@0.25.10)
       tsup:
         specifier: ^7.2.0
         version: 7.3.0(postcss@8.5.6)(ts-node@10.9.2(@types/node@20.19.17)(typescript@5.8.3))(typescript@5.8.3)
