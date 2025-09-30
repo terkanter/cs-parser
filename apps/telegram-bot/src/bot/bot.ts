@@ -1,9 +1,9 @@
-import type { FoundItemMessage, BuyResponseMessage } from "@repo/api-core";
+import type { BuyResponseMessage, FoundItemMessage } from "@repo/api-core";
 import { prisma } from "@repo/prisma";
-import { Bot, type Context, type SessionFlavor, session, InlineKeyboard } from "grammy";
+import { Bot, type Context, InlineKeyboard, type SessionFlavor, session } from "grammy";
 import { env } from "../env";
-import { logger } from "../utils/logger";
 import { rabbitmqProducer } from "../services/rabbitmq-producer";
+import { logger } from "../utils/logger";
 
 interface SessionData {
   step?: string;
@@ -29,10 +29,16 @@ export class TelegramBot {
     );
   }
 
+  private getTelegramId(ctx: Context): string | undefined {
+    const telegramChatId = ctx.chat?.id.toString();
+    const telegramUserId = ctx.from?.id.toString();
+    return telegramChatId || telegramUserId;
+  }
+
   private setupCommands() {
     // Start command
     this.bot.command("start", async (ctx) => {
-      const telegramId = ctx.from?.id.toString();
+      const telegramId = this.getTelegramId(ctx);
       if (!telegramId) return;
 
       await ctx.reply(
@@ -48,7 +54,8 @@ export class TelegramBot {
 
     // Link account command
     this.bot.command("link", async (ctx) => {
-      const telegramId = ctx.from?.id.toString();
+      const telegramId = this.getTelegramId(ctx);
+
       if (!telegramId) return;
 
       try {
@@ -81,7 +88,8 @@ export class TelegramBot {
 
     // Unlink account command
     this.bot.command("unlink", async (ctx) => {
-      const telegramId = ctx.from?.id.toString();
+      const telegramId = this.getTelegramId(ctx);
+
       if (!telegramId) return;
 
       try {
@@ -108,7 +116,8 @@ export class TelegramBot {
 
     // Status command
     this.bot.command("status", async (ctx) => {
-      const telegramId = ctx.from?.id.toString();
+      const telegramId = this.getTelegramId(ctx);
+
       if (!telegramId) return;
 
       try {
@@ -150,7 +159,7 @@ export class TelegramBot {
     // Handle callback queries (inline keyboard buttons)
     this.bot.on("callback_query", async (ctx) => {
       const data = ctx.callbackQuery.data;
-      
+
       if (data?.startsWith("buy_")) {
         await this.handleBuyRequest(ctx, data);
       } else {
@@ -173,9 +182,9 @@ export class TelegramBot {
         return;
       }
 
-      const [, buyRequestId, platform, id] = parts;
-      const telegramId = ctx.from?.id.toString();
-      
+      const [, buyRequestId, platform, id, price] = parts;
+      const telegramId = this.getTelegramId(ctx);
+
       if (!telegramId) {
         await ctx.answerCallbackQuery("❌ Ошибка идентификации");
         return;
@@ -196,13 +205,14 @@ export class TelegramBot {
         buyRequestId,
         userId: user.id,
         platform,
-        id,
+        id: Number(id),
+        price: Number(price),
         telegramMessageId: ctx.callbackQuery.message?.message_id,
-        telegramChatId: ctx.callbackQuery.message?.chat.id.toString(),
+        telegramChatId: this.getTelegramId(ctx)!,
       });
 
       await ctx.answerCallbackQuery("🔄 Обрабатываем покупку...");
-      
+
       logger.withContext({ buyRequestId, userId: user.id, platform }).info("Sent buy request to queue");
     } catch (error) {
       logger.withError(error).error("Error handling buy request");
@@ -234,8 +244,10 @@ export class TelegramBot {
         `🔗 Холд: ${item.unlockAt ? new Date(item.unlockAt).toLocaleString() : "Нет"}\n\n` +
         `🔗 Платформа ${message.platform}`;
 
-      const keyboard = new InlineKeyboard()
-        .text("🛒 Купить", `buy_${message.buyRequestId}_${message.platform}_${message.item.id}`);
+      const keyboard = new InlineKeyboard().text(
+        "🛒 Купить",
+        `buy_${message.buyRequestId}_${message.platform}_${message.item.id}_${item.price}`,
+      );
 
       await this.bot.api.sendMessage(user.telegramId, text, {
         reply_markup: keyboard,
@@ -267,11 +279,7 @@ export class TelegramBot {
       // If we have original message info, try to edit it
       if (message.telegramChatId && message.telegramMessageId) {
         try {
-          await this.bot.api.editMessageText(
-            message.telegramChatId,
-            message.telegramMessageId,
-            text
-          );
+          await this.bot.api.editMessageText(message.telegramChatId, message.telegramMessageId, text);
         } catch (editError) {
           // If edit fails, send new message
           logger.withContext({ error: editError }).warn("Failed to edit message, sending new one");
@@ -282,10 +290,12 @@ export class TelegramBot {
         await this.bot.api.sendMessage(user.telegramId, text);
       }
 
-      logger.withContext({ 
-        userId: message.userId, 
-        success: message.success 
-      }).info("Sent buy response notification");
+      logger
+        .withContext({
+          userId: message.userId,
+          success: message.success,
+        })
+        .info("Sent buy response notification");
     } catch (error) {
       logger.withError(error).error("Error sending buy response notification");
     }

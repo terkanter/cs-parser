@@ -14,7 +14,9 @@
     "ignore": ["dist/*", ".pnpm-store/*", "packages/api-client/*"],
     "rules": {
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "useTemplate": "off",
+        "noUnusedTemplateLiteral": "off"
       },
       "a11y": {
         "noNoninteractiveElementToInteractiveRole": "off",
