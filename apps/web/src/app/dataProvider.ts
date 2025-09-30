@@ -102,7 +102,7 @@ export const dataProvider = {
   },
 
   create: async (resource: string, params: any) => {
-    const { json } = await httpClient(`${getResourceUrl(resource)}/${params.id}`, {
+    const { json } = await httpClient(`${getResourceUrl(resource)}`, {
       method: "POST",
       body: JSON.stringify(params.data),
     });
