@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Platform-specific credentials schemas
 export const liskinsCredentialsSchema = z.object({
-  userId: z.number().int().positive({
+  userId: z.coerce.number().positive({
     message: "User ID must be a positive number",
   }),
   apiKey: z
