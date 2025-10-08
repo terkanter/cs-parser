@@ -48,6 +48,7 @@ COPY --from=builder --chown=1001:1001 /app/packages/prisma/prisma/ ./packages/pr
 COPY --from=builder --chown=1001:1001 /app/packages/prisma/generated/client/ ./packages/prisma/generated/client/
 COPY --from=builder --chown=1001:1001 /app/packages/api-core/dist/ ./packages/api-core/dist/
 COPY --from=builder --chown=1001:1001 /app/packages/api-errors/dist/ ./packages/api-errors/dist/
+COPY --from=builder --chown=1001:1001 /app/packages/steam-api/dist/ ./packages/steam-api/dist/
 COPY --from=builder --chown=1001:1001 /app/node_modules/ ./node_modules/
 COPY --from=builder --chown=1001:1001 /app/apps/telegram-bot/node_modules/ ./apps/telegram-bot/node_modules/
 COPY --from=builder --chown=1001:1001 /app/packages/prisma/node_modules/ ./packages/prisma/node_modules/
