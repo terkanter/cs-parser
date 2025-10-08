@@ -1,6 +1,6 @@
 import { buyHandlerService } from "./services/buy-handler.service";
 import { connectDatabase, disconnectDatabase } from "./services/database";
-import { lisSkinsService } from "./services/lis-skins";
+import { lisSkinsService } from "./services/lis-skins.service";
 import { rabbitmqService } from "./services/rabbitmq";
 import { logger } from "./utils/logger";
 
