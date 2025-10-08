@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { BuyResponseMessage, FoundItemMessage } from "@repo/api-core";
 import { prisma } from "@repo/prisma";
 import { Bot, type Context, InlineKeyboard, type SessionFlavor, session } from "grammy";
@@ -33,6 +34,57 @@ export class TelegramBot {
     const telegramChatId = ctx.chat?.id.toString();
     const telegramUserId = ctx.from?.id.toString();
     return telegramChatId || telegramUserId;
+  }
+
+  private async storeCallbackData(data: {
+    buyRequestId: string;
+    platform: string;
+    itemId: number;
+    price: number;
+  }): Promise<string> {
+    const hash = createHash('sha256')
+      .update(JSON.stringify(data))
+      .digest('hex')
+      .substring(0, 8);
+
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    
+    await prisma.telegramCallbackData.create({
+      data: {
+        id: hash,
+        data: data,
+        expiresAt,
+      },
+    });
+
+    return hash;
+  }
+
+  private async getCallbackData(id: string): Promise<{
+    buyRequestId: string;
+    platform: string;
+    itemId: number;
+    price: number;
+  } | null> {
+    const record = await prisma.telegramCallbackData.findUnique({
+      where: { id },
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      if (record) {
+        await prisma.telegramCallbackData.delete({
+          where: { id },
+        });
+      }
+      return null;
+    }
+
+    return record.data as {
+      buyRequestId: string;
+      platform: string;
+      itemId: number;
+      price: number;
+    };
   }
 
   private setupCommands() {
@@ -175,14 +227,22 @@ export class TelegramBot {
 
   private async handleBuyRequest(ctx: any, callbackData: string): Promise<void> {
     try {
-      // Parse callback data: "buy_{buyRequestId}_{platform}_{id}"
+      // Parse callback data: "buy_{shortId}"
       const parts = callbackData.split("_");
-      if (parts.length !== 4) {
+      if (parts.length !== 2) {
         await ctx.answerCallbackQuery("❌ Некорректные данные");
         return;
       }
 
-      const [, buyRequestId, platform, id, price] = parts;
+      const [, shortId] = parts;
+      
+      // Get full data from storage
+      const data = await this.getCallbackData(shortId);
+      if (!data) {
+        await ctx.answerCallbackQuery("❌ Данные устарели, попробуйте найти предмет заново");
+        return;
+      }
+
       const telegramId = this.getTelegramId(ctx);
 
       if (!telegramId) {
@@ -202,18 +262,22 @@ export class TelegramBot {
 
       // Send buy request message to RabbitMQ
       await rabbitmqProducer.publishBuyRequest({
-        buyRequestId,
+        buyRequestId: data.buyRequestId,
         userId: user.id,
-        platform,
-        id: Number(id),
-        price: Number(price),
+        platform: data.platform,
+        id: data.itemId,
+        price: data.price,
         telegramMessageId: ctx.callbackQuery.message?.message_id,
         telegramChatId: this.getTelegramId(ctx)!,
       });
 
       await ctx.answerCallbackQuery("🔄 Обрабатываем покупку...");
 
-      logger.withContext({ buyRequestId, userId: user.id, platform }).info("Sent buy request to queue");
+      logger.withContext({ 
+        buyRequestId: data.buyRequestId, 
+        userId: user.id, 
+        platform: data.platform 
+      }).info("Sent buy request to queue");
     } catch (error) {
       logger.withError(error).error("Error handling buy request");
       await ctx.answerCallbackQuery("❌ Произошла ошибка");
@@ -244,9 +308,16 @@ export class TelegramBot {
         `🔗 Холд: ${item.unlockAt ? new Date(item.unlockAt).toLocaleString() : "Нет"}\n\n` +
         `🔗 Платформа ${message.platform}`;
 
+      const shortId = await this.storeCallbackData({
+        buyRequestId: message.buyRequestId,
+        platform: message.platform,
+        itemId: message.item.id,
+        price: item.price,
+      });
+
       const keyboard = new InlineKeyboard().text(
         "🛒 Купить",
-        `buy_${message.buyRequestId}_${message.platform}_${message.item.id}_${item.price}`,
+        `buy_${shortId}`,
       );
 
       await this.bot.api.sendMessage(user.telegramId, text, {

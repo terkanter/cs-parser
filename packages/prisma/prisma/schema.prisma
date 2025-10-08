@@ -112,3 +112,12 @@ model PlatformAccount {
   @@unique([platform, userId])
   @@map("platform_account")
 }
+
+model TelegramCallbackData {
+  id        String   @id @default(cuid())
+  data      Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("telegram_callback_data")
+}
