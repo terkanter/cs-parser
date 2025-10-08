@@ -46,6 +46,8 @@ export interface FoundItemMessage {
     paintSeedTier?: number;
     quality: string;
     unlockAt: string | null;
+    imageUrl?: string | null;
+    classId: string;
   };
   foundAt: Date;
 }

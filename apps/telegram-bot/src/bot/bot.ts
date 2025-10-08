@@ -1,7 +1,7 @@
-import { createHash } from "node:crypto";
 import type { BuyResponseMessage, FoundItemMessage } from "@repo/api-core";
 import { prisma } from "@repo/prisma";
 import { Bot, type Context, InlineKeyboard, type SessionFlavor, session } from "grammy";
+import { createHash } from "node:crypto";
 import { env } from "../env";
 import { rabbitmqProducer } from "../services/rabbitmq-producer";
 import { logger } from "../utils/logger";
@@ -42,13 +42,10 @@ export class TelegramBot {
     itemId: number;
     price: number;
   }): Promise<string> {
-    const hash = createHash('sha256')
-      .update(JSON.stringify(data))
-      .digest('hex')
-      .substring(0, 8);
+    const hash = createHash("sha256").update(JSON.stringify(data)).digest("hex").substring(0, 8);
 
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    
+
     await prisma.telegramCallbackData.create({
       data: {
         id: hash,
@@ -235,7 +232,7 @@ export class TelegramBot {
       }
 
       const [, shortId] = parts;
-      
+
       // Get full data from storage
       const data = await this.getCallbackData(shortId);
       if (!data) {
@@ -273,11 +270,13 @@ export class TelegramBot {
 
       await ctx.answerCallbackQuery("🔄 Обрабатываем покупку...");
 
-      logger.withContext({ 
-        buyRequestId: data.buyRequestId, 
-        userId: user.id, 
-        platform: data.platform 
-      }).info("Sent buy request to queue");
+      logger
+        .withContext({
+          buyRequestId: data.buyRequestId,
+          userId: user.id,
+          platform: data.platform,
+        })
+        .info("Sent buy request to queue");
     } catch (error) {
       logger.withError(error).error("Error handling buy request");
       await ctx.answerCallbackQuery("❌ Произошла ошибка");
@@ -298,6 +297,7 @@ export class TelegramBot {
       }
 
       const { item } = message;
+
       const text =
         `🎯 Найден предмет!\n\n` +
         `🎲 Paint Seed: ${item.paintSeed}${item.paintSeedTier ? ` Tier: ${item.paintSeedTier}` : ""}\n\n` +
@@ -315,16 +315,25 @@ export class TelegramBot {
         price: item.price,
       });
 
-      const keyboard = new InlineKeyboard().text(
-        "🛒 Купить",
-        `buy_${shortId}`,
-      );
+      const keyboard = new InlineKeyboard().text("🛒 Купить", `buy_${shortId}`);
 
-      await this.bot.api.sendMessage(user.telegramId, text, {
-        reply_markup: keyboard,
-        // parse_mode: "markdown",
-        // disable_web_page_preview: true,
-      });
+      if (item.imageUrl) {
+        try {
+          await this.bot.api.sendPhoto(user.telegramId, item.imageUrl, {
+            caption: text,
+            reply_markup: keyboard,
+          });
+        } catch (error) {
+          // logger.withError(error).error("Error sending photo - " + item.image);
+          await this.bot.api.sendMessage(user.telegramId, text, {
+            reply_markup: keyboard,
+          });
+        }
+      } else {
+        await this.bot.api.sendMessage(user.telegramId, text, {
+          reply_markup: keyboard,
+        });
+      }
 
       logger.info(`Sent notification to user ${userId}`);
     } catch (error) {

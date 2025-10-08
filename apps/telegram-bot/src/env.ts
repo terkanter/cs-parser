@@ -16,6 +16,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   WEBHOOK_URL: z.string().url().optional(),
   WEBHOOK_SECRET: z.string().optional(),
+  STEAM_API_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse(patchedEnv);

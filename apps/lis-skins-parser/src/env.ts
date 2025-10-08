@@ -13,6 +13,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   RABBITMQ_URL: z.string().url().default("amqp://localhost:5672"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  STEAM_API_KEY: z.string(),
 });
 
 export const env = envSchema.parse(patchedEnv);

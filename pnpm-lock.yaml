@@ -201,6 +201,9 @@ importers:
       '@repo/prisma':
         specifier: workspace:*
         version: link:../../packages/prisma
+      '@repo/steam-api':
+        specifier: workspace:*
+        version: link:../../packages/steam-api
       amqplib:
         specifier: ^0.10.3
         version: 0.10.9
@@ -591,6 +594,31 @@ importers:
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
+
+  packages/steam-api:
+    dependencies:
+      '@dotenvx/dotenvx':
+        specifier: 1.44.1
+        version: 1.44.1
+      '@repo/api-core':
+        specifier: workspace:*
+        version: link:../api-core
+      '@repo/api-errors':
+        specifier: workspace:*
+        version: link:../api-errors
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
+    devDependencies:
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      hash-runner:
+        specifier: 2.0.1
+        version: 2.0.1
+      tsup:
+        specifier: 8.5.0
+        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.8.0)
 
   packages/tsconfig: {}
 

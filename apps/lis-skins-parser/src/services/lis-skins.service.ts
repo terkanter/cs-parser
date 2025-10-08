@@ -1,6 +1,8 @@
 import type { BuyRequestQuery } from "@repo/api-core";
 import { type BuyRequest, Platform } from "@repo/prisma";
+import { SteamApi } from "@repo/steam-api";
 import { LIS_SKINS_API_URL, LIS_SKINS_WEBSOCKET_URL } from "../consts";
+import { env } from "../env";
 import { BuyRequestRepository, PlatformAccountRepository } from "../repositories";
 import { UserRepository } from "../repositories/user.repository";
 import { logger } from "../utils/logger";
@@ -44,6 +46,7 @@ export class LisSkinsService {
     private buyRequestRepository: BuyRequestRepository,
     private platformAccountRepository: PlatformAccountRepository,
     private userRepository: UserRepository,
+    private steamApi: SteamApi,
   ) {}
 
   async addBuyRequest(buyRequest: BuyRequest): Promise<void> {
@@ -190,7 +193,7 @@ export class LisSkinsService {
       }
 
       if (item.event === "obtained_skin_deleted") {
-        logger.debug(`Skipping deleted item: ${item.name}`);
+        // logger.debug(`Skipping deleted item: ${item.name}`);
         return;
       }
 
@@ -205,6 +208,13 @@ export class LisSkinsService {
         if (this.matchesQuery(item, query)) {
           const paintSeedTier = this.getPaintSeedTier(item.item_paint_seed, query);
 
+          let imageUrl: string | null = null;
+          try {
+            imageUrl = await this.steamApi.getItemImage(item.item_class_id);
+          } catch (error) {
+            logger.withError(error).warn(`Failed to get image for class ID ${item.item_class_id}`);
+          }
+
           const foundItem = {
             id: item.id,
             name: item.name,
@@ -214,6 +224,8 @@ export class LisSkinsService {
             paintSeedTier,
             quality: this.extractQuality(item.name),
             unlockAt: item.unlock_at || null,
+            classId: item.item_class_id,
+            imageUrl,
           };
 
           await rabbitmqService.publishFoundItem({
@@ -227,10 +239,7 @@ export class LisSkinsService {
           logger
             .withContext({
               buyRequestId: buyRequest.id,
-              itemName: item.name,
-              price: item.price,
-              paintSeed: item.item_paint_seed,
-              event: item.event,
+              item,
             })
             .info(
               `Found matching item via WebSocket: ${item.name} - $${item.price} (${item.event}) ${itemCreatedAt.toISOString()}`,
@@ -614,5 +623,11 @@ export class LisSkinsService {
 const buyRequestRepository = new BuyRequestRepository();
 const platformAccountRepository = new PlatformAccountRepository();
 const userRepository = new UserRepository();
+const steamApi = new SteamApi(env.STEAM_API_KEY);
 
-export const lisSkinsService = new LisSkinsService(buyRequestRepository, platformAccountRepository, userRepository);
+export const lisSkinsService = new LisSkinsService(
+  buyRequestRepository,
+  platformAccountRepository,
+  userRepository,
+  steamApi,
+);

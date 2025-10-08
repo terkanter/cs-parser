@@ -18,6 +18,7 @@ export interface LisSkinsServiceConfig {
   updateInterval?: number;
   healthCheckInterval?: number;
   tokenRefreshInterval?: number;
+  steamApiKey?: string;
 }
 
 export class LisSkinsService {
@@ -26,6 +27,7 @@ export class LisSkinsService {
   private messageHandler: LisSkinsMessageHandler;
   private connectionService: LisSkinsConnectionService;
   private tradeService: LisSkinsTradeService;
+  private steamApi?: any;
   private isRunning = false;
 
   constructor(
@@ -44,6 +46,24 @@ export class LisSkinsService {
 
     // Initialize message handler
     this.messageHandler = new LisSkinsMessageHandler(this.onItemFound.bind(this));
+
+    // Initialize Steam API if key is provided
+    if (config.steamApiKey) {
+      try {
+        // Dynamic import to avoid bundling if not needed
+        import("@repo/steam-api")
+          .then(({ createSteamApi }) => {
+            this.steamApi = createSteamApi(config.steamApiKey!);
+            this.messageHandler.setSteamApi?.(this.steamApi);
+            logger.info("Steam API initialized for item images");
+          })
+          .catch((error) => {
+            logger.withError(error).warn("Failed to initialize Steam API");
+          });
+      } catch (error) {
+        logger.withError(error).warn("Steam API package not available");
+      }
+    }
 
     // Initialize connection service
     this.connectionService = new LisSkinsConnectionService(

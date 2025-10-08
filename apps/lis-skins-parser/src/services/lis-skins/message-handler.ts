@@ -32,6 +32,8 @@ export interface FoundItem {
   paintSeedTier?: number;
   quality: string;
   unlockAt: string | null;
+  imageUrl?: string | null;
+  classId: string;
 }
 
 export interface FoundItemMessage {
@@ -45,12 +47,18 @@ export interface FoundItemMessage {
 export interface IMessageHandler {
   handleMessage(item: LisSkinsWebSocketItem, buyRequests: BuyRequest[]): Promise<FoundItemMessage[]>;
   setConnectionStartTime(time: Date): void;
+  setSteamApi?(steamApi: any): void;
 }
 
 export class LisSkinsMessageHandler implements IMessageHandler {
   private connectionStartTime: Date = new Date();
+  private steamApi?: any;
 
   constructor(private onItemFound: (message: FoundItemMessage) => Promise<void>) {}
+
+  setSteamApi(steamApi: any): void {
+    this.steamApi = steamApi;
+  }
 
   setConnectionStartTime(time: Date): void {
     this.connectionStartTime = time;
@@ -83,7 +91,7 @@ export class LisSkinsMessageHandler implements IMessageHandler {
         const query = buyRequest.query as unknown as BuyRequestQuery;
 
         if (this.matchesQuery(item, query)) {
-          const foundItem = this.createFoundItem(item, query);
+          const foundItem = await this.createFoundItem(item, query);
 
           const message: FoundItemMessage = {
             buyRequestId: buyRequest.id,
@@ -162,7 +170,18 @@ export class LisSkinsMessageHandler implements IMessageHandler {
     return true;
   }
 
-  private createFoundItem(item: LisSkinsWebSocketItem, query: BuyRequestQuery): FoundItem {
+  private async createFoundItem(item: LisSkinsWebSocketItem, query: BuyRequestQuery): Promise<FoundItem> {
+    let imageUrl: string | null = null;
+
+    // Try to get image URL from Steam API if available
+    if (this.steamApi && item.item_class_id) {
+      try {
+        imageUrl = await this.steamApi.getItemImage(item.item_class_id);
+      } catch (error) {
+        logger.withError(error).warn(`Failed to get image for class ID ${item.item_class_id}`);
+      }
+    }
+
     return {
       id: item.id,
       name: item.name,
@@ -172,6 +191,8 @@ export class LisSkinsMessageHandler implements IMessageHandler {
       paintSeedTier: this.getPaintSeedTier(item.item_paint_seed, query),
       quality: this.extractQuality(item.name),
       unlockAt: item.unlock_at || null,
+      imageUrl,
+      classId: item.item_class_id,
     };
   }
 

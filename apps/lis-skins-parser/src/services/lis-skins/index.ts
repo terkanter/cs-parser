@@ -1,3 +1,4 @@
+import { env } from "../../env";
 import { BuyRequestRepository, PlatformAccountRepository, UserRepository } from "../../repositories";
 import { LisSkinsService } from "./lis-skins-service";
 
@@ -14,4 +15,6 @@ const buyRequestRepository = new BuyRequestRepository();
 const platformAccountRepository = new PlatformAccountRepository();
 const userRepository = new UserRepository();
 
-export const lisSkinsService = new LisSkinsService(buyRequestRepository, platformAccountRepository, userRepository);
+export const lisSkinsService = new LisSkinsService(buyRequestRepository, platformAccountRepository, userRepository, {
+  steamApiKey: env.STEAM_API_KEY,
+});
