@@ -36,6 +36,7 @@ export class LisSkinsService {
   private userApiKeys = new Map<string, string>(); // userId -> apiKey
   private connectionStartTime: Date = new Date();
   private lastTokenRefresh: Date = new Date();
+  private lastMessageReceivedAt: Date = new Date();
   private tokenRefreshInterval = 30 * 60 * 1000; // 30 minutes
   private healthCheckInterval_ms = 60 * 1000; // 1 minute
 
@@ -150,7 +151,7 @@ export class LisSkinsService {
           if (Date.now() - this.lastTokenRefresh.getTime() > this.tokenRefreshInterval) {
             await this.refreshTokens();
           }
-          
+
           // Return the first available token (could be refreshed)
           const tokens = Array.from(this.userTokens.values());
           return tokens.length > 0 ? tokens[0] : authToken;
@@ -180,6 +181,9 @@ export class LisSkinsService {
 
   private async handleGlobalMessage(item: LisSkinsWebSocketItem): Promise<void> {
     try {
+      // Update last message timestamp
+      this.lastMessageReceivedAt = new Date();
+
       const itemCreatedAt = new Date(item.created_at);
       if (itemCreatedAt < this.connectionStartTime) {
         return;
@@ -238,10 +242,10 @@ export class LisSkinsService {
     }
   }
 
-
   private handleGlobalOpen(): void {
     logger.info("Global WebSocket opened for connection");
     this.connectionStartTime = new Date();
+    this.lastMessageReceivedAt = new Date();
   }
 
   private matchesQuery(item: LisSkinsWebSocketItem, query: BuyRequestQuery): boolean {
@@ -317,7 +321,7 @@ export class LisSkinsService {
 
         const apiKey = (auth.credentials as { apiKey: string }).apiKey;
         const authToken = await this.getWebSocketToken(apiKey);
-        
+
         this.userApiKeys.set(userId, apiKey);
         this.userTokens.set(userId, authToken);
 
@@ -351,7 +355,7 @@ export class LisSkinsService {
 
         const apiKey = (auth.credentials as { apiKey: string }).apiKey;
         const authToken = await this.getWebSocketToken(apiKey);
-        
+
         this.userApiKeys.set(userId, apiKey);
         this.userTokens.set(userId, authToken);
 
@@ -434,63 +438,93 @@ export class LisSkinsService {
         }
       }
 
-    this.cleanupUnusedTokens(buyRequests);
-  } catch (error) {
-    logger.withError(error).error("Error updating WebSocket connections");
+      this.cleanupUnusedTokens(buyRequests);
+    } catch (error) {
+      logger.withError(error).error("Error updating WebSocket connections");
+    }
   }
-}
 
-private async refreshTokens(): Promise<void> {
-  try {
-    logger.info("Refreshing WebSocket tokens...");
-    
-    const refreshPromises = Array.from(this.userApiKeys.entries()).map(async ([userId, apiKey]) => {
-      try {
-        const newToken = await this.getWebSocketToken(apiKey);
-        this.userTokens.set(userId, newToken);
-        logger.debug(`Refreshed token for user ${userId}`);
-      } catch (error) {
-        logger.withError(error).error(`Failed to refresh token for user ${userId}`);
+  private async refreshTokens(): Promise<void> {
+    try {
+      logger.info("Refreshing WebSocket tokens...");
+
+      const refreshPromises = Array.from(this.userApiKeys.entries()).map(async ([userId, apiKey]) => {
+        try {
+          const newToken = await this.getWebSocketToken(apiKey);
+          this.userTokens.set(userId, newToken);
+          logger.debug(`Refreshed token for user ${userId}`);
+        } catch (error) {
+          logger.withError(error).error(`Failed to refresh token for user ${userId}`);
+        }
+      });
+
+      await Promise.all(refreshPromises);
+      this.lastTokenRefresh = new Date();
+
+      logger.info(`Refreshed tokens for ${this.userTokens.size} users`);
+    } catch (error) {
+      logger.withError(error).error("Error refreshing tokens");
+    }
+  }
+
+  private async performHealthCheck(): Promise<void> {
+    try {
+      if (!this.isRunning || this.activeBuyRequests.size === 0) {
+        return;
       }
-    });
 
-    await Promise.all(refreshPromises);
-    this.lastTokenRefresh = new Date();
-    
-    logger.info(`Refreshed tokens for ${this.userTokens.size} users`);
-  } catch (error) {
-    logger.withError(error).error("Error refreshing tokens");
+      const isConnected = websocketManager.isConnected();
+      const uptime = websocketManager.getConnectionUptime();
+      const centrifugeState = websocketManager.getCentrifugeState();
+
+      logger.info(
+        `Health check: connected=${isConnected}, state=${centrifugeState}, uptime=${uptime}ms, requests=${this.activeBuyRequests.size}, tokens=${this.userTokens.size}`,
+      );
+
+      // If not connected and we have active requests, try to reconnect
+      if (!isConnected && this.activeBuyRequests.size > 0) {
+        logger.warn(
+          `WebSocket not connected (state: ${centrifugeState}) but have active requests. Attempting to reconnect...`,
+        );
+
+        // First try to refresh tokens in case they're expired
+        await this.refreshTokens();
+
+        // Then attempt to start connection
+        await this.startGlobalConnection();
+      }
+
+      // If connection is very old (> 2 hours), force reconnect to get fresh tokens
+      const maxConnectionAge = 2 * 60 * 60 * 1000; // 2 hours
+      if (isConnected && uptime > maxConnectionAge) {
+        logger.info("Connection is old, forcing reconnect for fresh tokens...");
+        await this.refreshTokens();
+        await websocketManager.forceReconnect();
+      }
+
+      // Additional check: if we think we're connected but haven't received any data in a while
+      // This could indicate a "zombie" connection
+      const timeSinceLastMessage = Date.now() - this.lastMessageReceivedAt.getTime();
+      const maxSilentPeriod = 5 * 60 * 1000; // 5 minutes
+      if (isConnected && timeSinceLastMessage > maxSilentPeriod && uptime > maxSilentPeriod) {
+        logger.warn(
+          `Connection appears to be stale (no messages for ${Math.round(timeSinceLastMessage / 1000)}s). Forcing reconnect...`,
+        );
+        await websocketManager.forceReconnect();
+      }
+    } catch (error) {
+      logger.withError(error).error("Error during health check");
+
+      // If health check itself fails, try to recover
+      try {
+        logger.error("Health check failed, attempting recovery...");
+        await this.refreshTokens();
+        await websocketManager.forceReconnect();
+      } catch (recoveryError) {
+        logger.withError(recoveryError).error("Failed to recover from health check error");
+      }
+    }
   }
-}
-
-private async performHealthCheck(): Promise<void> {
-  try {
-    if (!this.isRunning || this.activeBuyRequests.size === 0) {
-      return;
-    }
-
-    const isConnected = websocketManager.isConnected();
-    const uptime = websocketManager.getConnectionUptime();
-    
-    logger.debug(`Health check: connected=${isConnected}, uptime=${uptime}ms, requests=${this.activeBuyRequests.size}`);
-
-    // If not connected and we have active requests, try to reconnect
-    if (!isConnected && this.activeBuyRequests.size > 0) {
-      logger.warn("WebSocket not connected but have active requests. Attempting to reconnect...");
-      await this.startGlobalConnection();
-    }
-
-    // If connection is very old (> 2 hours), force reconnect to get fresh tokens
-    const maxConnectionAge = 2 * 60 * 60 * 1000; // 2 hours
-    if (isConnected && uptime > maxConnectionAge) {
-      logger.info("Connection is old, forcing reconnect for fresh tokens...");
-      await this.refreshTokens();
-      await websocketManager.forceReconnect();
-    }
-  } catch (error) {
-    logger.withError(error).error("Error during health check");
-  }
-}
 
   private async getWebSocketToken(apiKey: string): Promise<string> {
     try {
