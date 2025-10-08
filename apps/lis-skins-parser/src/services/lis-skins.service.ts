@@ -30,12 +30,14 @@ interface LisSkinsWebSocketItem {
 export class LisSkinsService {
   private isRunning = false;
   private intervalId: NodeJS.Timeout | null = null;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
   private activeBuyRequests = new Map<string, BuyRequest>(); // buyRequestId -> BuyRequest
   private userTokens = new Map<string, string>(); // userId -> authToken
+  private userApiKeys = new Map<string, string>(); // userId -> apiKey
   private connectionStartTime: Date = new Date();
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 5000; // 5 seconds
+  private lastTokenRefresh: Date = new Date();
+  private tokenRefreshInterval = 30 * 60 * 1000; // 30 minutes
+  private healthCheckInterval_ms = 60 * 1000; // 1 minute
 
   constructor(
     private buyRequestRepository: BuyRequestRepository,
@@ -74,9 +76,15 @@ export class LisSkinsService {
 
     await this.initializeConnections();
 
+    // Update connections every 30 seconds
     this.intervalId = setInterval(async () => {
       await this.updateConnections();
     }, 30000);
+
+    // Health check every minute
+    this.healthCheckInterval = setInterval(async () => {
+      await this.performHealthCheck();
+    }, this.healthCheckInterval_ms);
   }
 
   async stop(): Promise<void> {
@@ -92,8 +100,15 @@ export class LisSkinsService {
       this.intervalId = null;
     }
 
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+
     await websocketManager.stopConnection();
     this.activeBuyRequests.clear();
+    this.userTokens.clear();
+    this.userApiKeys.clear();
 
     await rabbitmqService.close();
   }
@@ -130,18 +145,32 @@ export class LisSkinsService {
             sort_by: "newest",
           },
         },
-        getToken: async () => authToken,
+        getToken: async () => {
+          // Check if we need to refresh tokens
+          if (Date.now() - this.lastTokenRefresh.getTime() > this.tokenRefreshInterval) {
+            await this.refreshTokens();
+          }
+          
+          // Return the first available token (could be refreshed)
+          const tokens = Array.from(this.userTokens.values());
+          return tokens.length > 0 ? tokens[0] : authToken;
+        },
         onMessage: (data) => this.handleGlobalMessage(data),
-        onError: (error) => this.handleGlobalError(error),
-        onClose: () => this.handleGlobalClose(),
+        onError: (error) => {
+          logger.withError(error).error("Global WebSocket error for connection");
+          // WebSocket manager handles reconnection automatically
+        },
+        onClose: () => {
+          logger.warn("Global WebSocket closed for connection");
+          // WebSocket manager handles reconnection automatically
+        },
         onOpen: () => this.handleGlobalOpen(),
       };
 
       await websocketManager.startConnection(config);
-      this.reconnectAttempts = 0;
     } catch (error) {
       logger.withError(error).error("Failed to start global WebSocket connection");
-      await this.scheduleReconnect();
+      throw error; // Let websocket manager handle reconnection
     }
   }
 
@@ -209,41 +238,10 @@ export class LisSkinsService {
     }
   }
 
-  private async handleGlobalError(error: Error): Promise<void> {
-    logger.withError(error).error("Global WebSocket error for connection");
-    await this.scheduleReconnect();
-  }
-
-  private async handleGlobalClose(): Promise<void> {
-    logger.warn("Global WebSocket closed for connection");
-
-    if (this.isRunning && this.activeBuyRequests.size > 0) {
-      await this.scheduleReconnect();
-    }
-  }
 
   private handleGlobalOpen(): void {
     logger.info("Global WebSocket opened for connection");
-    this.reconnectAttempts = 0;
-  }
-
-  private async scheduleReconnect(): Promise<void> {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      logger.error(`Max reconnection attempts reached (${this.maxReconnectAttempts}). Stopping reconnection.`);
-      return;
-    }
-
-    this.reconnectAttempts++;
-    const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1); // Exponential backoff
-
-    logger.info(`Scheduling reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`);
-
-    setTimeout(async () => {
-      if (this.isRunning && this.activeBuyRequests.size > 0) {
-        logger.info(`Attempting to reconnect (attempt ${this.reconnectAttempts})`);
-        await this.startGlobalConnection();
-      }
-    }, delay);
+    this.connectionStartTime = new Date();
   }
 
   private matchesQuery(item: LisSkinsWebSocketItem, query: BuyRequestQuery): boolean {
@@ -306,6 +304,7 @@ export class LisSkinsService {
     const userIds = [...new Set(buyRequests.map((br) => br.createdByUserId))];
 
     this.userTokens.clear();
+    this.userApiKeys.clear();
 
     for (const userId of userIds) {
       try {
@@ -316,7 +315,10 @@ export class LisSkinsService {
           continue;
         }
 
-        const authToken = await this.getWebSocketToken((auth.credentials as { apiKey: string }).apiKey);
+        const apiKey = (auth.credentials as { apiKey: string }).apiKey;
+        const authToken = await this.getWebSocketToken(apiKey);
+        
+        this.userApiKeys.set(userId, apiKey);
         this.userTokens.set(userId, authToken);
 
         logger.debug(`Loaded auth token for user ${userId}`);
@@ -325,6 +327,7 @@ export class LisSkinsService {
       }
     }
 
+    this.lastTokenRefresh = new Date();
     logger.info(`Loaded tokens for ${this.userTokens.size} users`);
   }
 
@@ -346,7 +349,10 @@ export class LisSkinsService {
           continue;
         }
 
-        const authToken = await this.getWebSocketToken((auth.credentials as { apiKey: string }).apiKey);
+        const apiKey = (auth.credentials as { apiKey: string }).apiKey;
+        const authToken = await this.getWebSocketToken(apiKey);
+        
+        this.userApiKeys.set(userId, apiKey);
         this.userTokens.set(userId, authToken);
 
         logger.debug(`Loaded auth token for new user ${userId}`);
@@ -370,6 +376,7 @@ export class LisSkinsService {
 
     for (const userId of tokensToRemove) {
       this.userTokens.delete(userId);
+      this.userApiKeys.delete(userId);
       logger.debug(`Removed token for inactive user ${userId}`);
     }
 
@@ -427,11 +434,63 @@ export class LisSkinsService {
         }
       }
 
-      this.cleanupUnusedTokens(buyRequests);
-    } catch (error) {
-      logger.withError(error).error("Error updating WebSocket connections");
-    }
+    this.cleanupUnusedTokens(buyRequests);
+  } catch (error) {
+    logger.withError(error).error("Error updating WebSocket connections");
   }
+}
+
+private async refreshTokens(): Promise<void> {
+  try {
+    logger.info("Refreshing WebSocket tokens...");
+    
+    const refreshPromises = Array.from(this.userApiKeys.entries()).map(async ([userId, apiKey]) => {
+      try {
+        const newToken = await this.getWebSocketToken(apiKey);
+        this.userTokens.set(userId, newToken);
+        logger.debug(`Refreshed token for user ${userId}`);
+      } catch (error) {
+        logger.withError(error).error(`Failed to refresh token for user ${userId}`);
+      }
+    });
+
+    await Promise.all(refreshPromises);
+    this.lastTokenRefresh = new Date();
+    
+    logger.info(`Refreshed tokens for ${this.userTokens.size} users`);
+  } catch (error) {
+    logger.withError(error).error("Error refreshing tokens");
+  }
+}
+
+private async performHealthCheck(): Promise<void> {
+  try {
+    if (!this.isRunning || this.activeBuyRequests.size === 0) {
+      return;
+    }
+
+    const isConnected = websocketManager.isConnected();
+    const uptime = websocketManager.getConnectionUptime();
+    
+    logger.debug(`Health check: connected=${isConnected}, uptime=${uptime}ms, requests=${this.activeBuyRequests.size}`);
+
+    // If not connected and we have active requests, try to reconnect
+    if (!isConnected && this.activeBuyRequests.size > 0) {
+      logger.warn("WebSocket not connected but have active requests. Attempting to reconnect...");
+      await this.startGlobalConnection();
+    }
+
+    // If connection is very old (> 2 hours), force reconnect to get fresh tokens
+    const maxConnectionAge = 2 * 60 * 60 * 1000; // 2 hours
+    if (isConnected && uptime > maxConnectionAge) {
+      logger.info("Connection is old, forcing reconnect for fresh tokens...");
+      await this.refreshTokens();
+      await websocketManager.forceReconnect();
+    }
+  } catch (error) {
+    logger.withError(error).error("Error during health check");
+  }
+}
 
   private async getWebSocketToken(apiKey: string): Promise<string> {
     try {
@@ -458,7 +517,6 @@ export class LisSkinsService {
 
   async buyItem(userId: string, id: number, price: number): Promise<{ success: boolean; message: string }> {
     try {
-      // Get user's LIS-Skins credentials
       const auth = await this.platformAccountRepository.findLisSkinsAccountByUserId(userId);
       if (!auth) {
         return { success: false, message: "Не найдена авторизация для LIS-Skins" };
