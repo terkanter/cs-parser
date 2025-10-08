@@ -12,6 +12,8 @@ export interface ITokenManager {
   loadTokens(userIds: string[]): Promise<void>;
   getToken(userId?: string): Promise<string | null>;
   refreshTokens(): Promise<void>;
+  addUser(userId: string): Promise<boolean>;
+  removeUser(userId: string): void;
   getMetrics(): { totalTokens: number; lastRefresh: Date; tokenAges: { userId: string; age: number }[] };
   clearTokens(userIds?: string[]): void;
   getAllTokens(): Map<string, TokenInfo>;

@@ -119,11 +119,13 @@ export class LisSkinsService {
     try {
       await rabbitmqService.publishFoundItem(message);
 
-      logger.info("Published found item to RabbitMQ", {
-        buyRequestId: message.buyRequestId,
-        itemName: message.item.name,
-        price: message.item.price,
-      });
+      logger
+        .withContext({
+          buyRequestId: message.buyRequestId,
+          itemName: message.item.name,
+          price: message.item.price,
+        })
+        .info("Published found item to RabbitMQ");
     } catch (error) {
       logger.withError(error).error("Failed to publish found item");
     }

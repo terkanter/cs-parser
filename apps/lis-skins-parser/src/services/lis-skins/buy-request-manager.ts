@@ -9,6 +9,9 @@ export interface IBuyRequestManager {
   getBuyRequests(): BuyRequest[];
   hasBuyRequests(): boolean;
   updateBuyRequests(): Promise<{ added: string[]; removed: string[] }>;
+  getUserIds(): string[];
+  getBuyRequest(id: string): BuyRequest | undefined;
+  getMetrics(): { total: number; byUser: Record<string, number>; ids: string[] };
 }
 
 export class BuyRequestManager implements IBuyRequestManager {
