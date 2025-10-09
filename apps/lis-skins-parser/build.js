@@ -21,7 +21,7 @@ async function build() {
       plugins: [
         nodeExternalsPlugin({
           // Bundle workspace packages
-          allowList: ["@repo/prisma", "@repo/api-errors", "@repo/api-core"],
+          allowList: ["@repo/prisma", "@repo/api-errors", "@repo/api-core", "@repo/steam-api"],
         }),
       ],
       external: ["@dotenvx/dotenvx"],
